@@ -191,6 +191,7 @@ h1,h2,h3{margin:0;font-weight:700}
     <div id="prog"><i></i><b>🚂</b><span>🏁</span></div>
     <div class="hpill" id="dist">0 m</div>
     <div class="hpill">⭐ <span id="hStars">0</span></div>
+    <div class="hpill" id="hDuckP" hidden>🐤 <span id="hDucks">0</span></div>
     <button class="mini" id="bPause" aria-label="Pause">⏸️</button>
   </div>
   <div id="gBanner"></div>
@@ -256,7 +257,7 @@ const JUMP=760,GRAV=2000;
 
 /* ================= save ================= */
 const SKEY="choochoo_run_v1";
-const save=Object.assign({stars:0,skin:"red",cards:["shield","magnet"],mode:"journey",journey:1,best:0,runs:0,trips:0,mute:false},
+const save=Object.assign({stars:0,skin:"red",cards:["shield","magnet"],mode:"journey",journey:1,best:0,runs:0,trips:0,ducks:0,mute:false},
   (()=>{try{return JSON.parse(localStorage.getItem(SKEY)||"{}")||{}}catch(e){return{}}})());
 const persist=()=>{try{localStorage.setItem(SKEY,JSON.stringify(save))}catch(e){}};
 const has=x=>save.stars>=x.need;
@@ -314,7 +315,8 @@ const sfx={
   // steam "chuff": a puff of filtered noise; accents make the chuff-a-chuff rhythm
   chuff(acc=1){noise(.14,1000,.09*acc,"bandpass",{q:.7,to:600});noise(.1,260,.05*acc,"lowpass")},
   // wheels going over a wooden track joint
-  clack(at=0,vol=1){tone(420,.07,{vol:.018*vol,at,atk:.004});tone(1100,.04,{vol:.005*vol,at,atk:.004})},
+  clack(at=0,vol=1){tone(300,.06,{vol:.008*vol,at,atk:.006})},
+  squeak(at=0){tone(1300,.09,{to:1900,type:"triangle",vol:.05,at,atk:.005});tone(1750,.12,{to:1250,type:"triangle",vol:.045,at:at+.11,atk:.005})},
   jump(){noise(.22,2600,.07,"highpass",{atk:.01});tone(392,.16,{to:740,type:"triangle",vol:.06})},
   land(){woodKnock(220,0,.16);woodKnock(330,.03,.07)},
   star2(){[1760,2349,2637].forEach((f,i)=>{tone(f,.45,{vol:.05,at:i*.07,atk:.003});tone(f*2.76,.2,{vol:.012,at:i*.07,atk:.003})})},
@@ -555,7 +557,7 @@ function openReady(){
 }
 function openShed(){
   const un=ALL_UNLOCKS.filter(has).length;
-  $("#shedStats").innerHTML=`<div class="starchip">🚉 Journeys done: ${save.journey-1}</div><div class="starchip">♾️ Best: ${save.best} m</div><div class="starchip">🎁 Unlocked: ${un}/${ALL_UNLOCKS.length}</div>`;
+  $("#shedStats").innerHTML=`<div class="starchip">🚉 Journeys done: ${save.journey-1}</div><div class="starchip">♾️ Best: ${save.best} m</div><div class="starchip">🎁 Unlocked: ${un}/${ALL_UNLOCKS.length}</div><div class="starchip">🐤 Ducks rescued: ${save.ducks||0}</div>`;
   pieceTiles($("#shedPieces"));trainTiles($("#shedTrains"),false);
   const cg=$("#shedCards");cg.innerHTML="";for(const id in CARDS){const b=cardEl(id,{locked:!has(CARDS[id])});b.tabIndex=-1;cg.appendChild(b)}
   show("sShed");
@@ -600,6 +602,8 @@ function addPiece(id,len){
   if(P.rail)G.rails.push([x0+P.rail[0],x0+P.rail[1]]);
   if(P.ramp)G.ramps.push(P.ramp.map(v=>x0+v));
   for(const g of pc.gaps)G.gaps.push(g);
+  // A rubber duck waiting on the track to be rescued: just roll into it.
+  if((id==="flat"||id==="tunnel")&&!len&&Math.random()<.35){const lx=id==="tunnel"?P.len/2:P.len*.82;G.ducks.push({x:x0+lx,y:-P.h(lx),got:false,t:0,ph:Math.random()*6})}
   const first=G.stars.length;
   for(const st of P.stars)G.stars.push({x:x0+st[0],y:-st[1],got:false,t:0,v:1});
   // Now and then (about 1 piece in 7) the middle star, usually the top of a jump arc, is a blue star worth 2.
@@ -635,7 +639,7 @@ async function startRun(){
   show("sGame");resize();
   G={mode:save.mode,level:save.journey,imgs,ex:200,y:0,vy:0,onGround:true,coyote:-9,jumpBuf:0,time:0,
      pieces:[],gaps:[],stars:[],obs:[],rivers:[],tunnels:[],rails:[],ramps:[],parts:[],hist:[],genX:-400,done:false,
-     goalPlan:(300+100*(save.journey-1))*20,goalX:Infinity,hearts:3,invuln:0,shake:0,starsGot:0,spd:0,camY:0,beat:0,wheelA:0,skin:skin(),
+     goalPlan:(300+100*(save.journey-1))*20,goalX:Infinity,hearts:3,invuln:0,shake:0,starsGot:0,ducks:[],ducksGot:0,spd:0,camY:0,beat:0,wheelA:0,skin:skin(),
      fx:{shield:0,magnet:0,turbo:0,snail:0,wings:0},cards:myCards().map(id=>({id,used:false})),
      state:"run",endT:0,chugT:0,smokeT:0,nextMile:100,paused:false,started:false,sunk:false};
   addPiece("flat",1000);
@@ -644,7 +648,7 @@ async function startRun(){
   $("#prog").hidden=G.mode!=="journey";$("#dist").hidden=G.mode==="journey";
   $("#prog i").style.width="0";$("#prog b").style.left="4%";$("#dist").textContent="0 m";
   $("#jumpHint").hidden=false;$("#pauseOv").hidden=true;
-  renderHudCards();hudHearts();$("#hStars").textContent="0";
+  renderHudCards();hudHearts();$("#hStars").textContent="0";$("#hDuckP").hidden=true;
   sfx.whistle();banner(G.mode==="journey"?`Journey ${G.level}: to the station! 🚉`:"How far can you go? ♾️",2600);
   lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
@@ -746,6 +750,12 @@ function update(dt){
       if(s.v>1){sfx.star2();spawn(s.x,s.y,12,"spark",{color:"#74c0fc",spread:300,life:.6});spawn(s.x,s.y-10,1,"txt",{vy:-70,spread:0,life:1,e:"+2",color:"#1971c2"})}
       else{sfx.star();spawn(s.x,s.y,6,"spark",{color:"#ffd43b",spread:220,life:.45})}}
   }
+  for(const k of g.ducks){
+    if(k.got){k.t+=d;continue}
+    if(Math.abs(k.x-bx)<42&&Math.abs(k.y-12-by)<44){k.got=true;g.ducksGot++;sfx.squeak();
+      spawn(k.x,k.y-14,10,"spark",{color:"#ffe066",spread:260,life:.55});spawn(k.x,k.y-34,1,"txt",{vy:-70,spread:0,life:1.1,e:"+3",color:"#e67700"});
+      banner(pick(["You rescued a rubber duck! 🐤","Squeak! A duck friend! 🐤","Duck aboard! 🐤"]),1500);$("#hDuckP").hidden=false;$("#hDucks").textContent=g.ducksGot}
+  }
   // ---- effects & sounds
   g.smokeT-=d;if(g.smokeT<=0&&g.spd>0){g.smokeT=g.fx.turbo>0?.04:.09;spawn(g.ex+16,g.y-64,1,"smoke",{vx:-30,vy:-60,spread:20,life:1,r:7})}
   if(g.fx.turbo>0)spawn(g.ex-150,g.y-20,1,"spark",{vx:-200,color:pick(["#ff922b","#ffd43b","#ff6b6b"]),spread:60,life:.35,r:6});
@@ -765,7 +775,7 @@ function update(dt){
   // ---- tidy
   const cut=g.ex-V.W;
   if(g.pieces.length>4&&g.pieces[0].x1<cut)g.pieces.shift();
-  g.stars=g.stars.filter(s=>s.got?s.t<1:s.x>cut);g.obs=g.obs.filter(o=>o.x>cut);g.gaps=g.gaps.filter(a=>a[1]>cut);
+  g.stars=g.stars.filter(s=>s.got?s.t<1:s.x>cut);g.ducks=g.ducks.filter(k=>k.got?k.t<1:k.x>cut);g.obs=g.obs.filter(o=>o.x>cut);g.gaps=g.gaps.filter(a=>a[1]>cut);
   // ---- hud
   if(g.mode==="journey"){const f=clamp(g.ex/(isFinite(g.goalX)?g.goalX:g.goalPlan),0,1);$("#prog i").style.width=`calc(${f*100}% - ${f*8}px)`;$("#prog b").style.left=(4+f*90)+"%"}
   else $("#dist").textContent=Math.floor(g.ex/20)+" m";
@@ -776,7 +786,7 @@ function splash(){
   const g=G;
   if(g.state!=="run"){g.y=64;g.vy=0;g.sunk=true;return}
   const gap=g.gaps.find(a=>g.ex>=a[0]-40&&g.ex<=a[1]+10)||[g.ex,g.ex+120];
-  sfx.splash();spawn(g.ex,40,18,"drop",{vy:-420,spread:260,color:"#74c0fc",life:.9,r:6});
+  sfx.splash();sfx.squeak(.4);spawn(g.ex,40,18,"drop",{vy:-420,spread:260,color:"#74c0fc",life:.9,r:6});
   if(!(g.fx.shield>0)&&g.invuln<=0)hurt();else sfx.boing();
   if(g.state==="run")banner("Splash! Boing! 💦",1300);
   const tx=gap[1]+50,ty=-(groundH(tx,true)||0),t=Math.max(.35,(tx-g.ex)/Math.max(g.spd,120));
@@ -817,6 +827,19 @@ function star(x,y,r,rot,v=1){
   starPath(x+r*.14,y+r*.22,r,rot);cx.fillStyle=c[0];cx.fill();
   starPath(x,y,r,rot);const g=cx.createRadialGradient(x-r*.3,y-r*.4,1,x,y,r*1.1);g.addColorStop(0,c[1]);g.addColorStop(.45,c[2]);g.addColorStop(1,c[3]);
   cx.fillStyle=g;cx.fill();cx.lineWidth=1.6;cx.strokeStyle=c[4];cx.stroke();
+}
+// A classic yellow rubber duck. (x,y) is the bottom middle; f=1 faces right, -1 faces left.
+function rubberDuck(x,y,s=1,f=1){
+  cx.save();cx.translate(x,y);cx.scale(s*f,s);
+  const g=cx.createRadialGradient(-3,-16,2,0,-10,20);g.addColorStop(0,"#fff8b8");g.addColorStop(.5,"#ffd43b");g.addColorStop(1,"#f08c00");
+  cx.fillStyle=g;cx.strokeStyle="rgba(160,90,0,.45)";cx.lineWidth=1;
+  cx.beginPath();cx.moveTo(-11,-9);cx.lineTo(-18,-19);cx.lineTo(-7,-14);cx.closePath();cx.fill();cx.stroke();
+  cx.beginPath();cx.ellipse(0,-8,14,8.5,0,0,7);cx.fill();cx.stroke();
+  cx.beginPath();cx.arc(6,-21,7.5,0,7);cx.fill();cx.stroke();
+  cx.fillStyle="#ff922b";cx.beginPath();cx.ellipse(14,-20,5,2.4,.1,0,7);cx.fill();cx.fillStyle="#e8590c";cx.beginPath();cx.ellipse(13.5,-18.6,4,1.3,.1,0,7);cx.fill();
+  cx.fillStyle="#2b1d12";cx.beginPath();cx.arc(8.5,-23,1.6,0,7);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(9,-23.6,.6,0,7);cx.fill();
+  cx.strokeStyle="rgba(200,110,0,.6)";cx.lineWidth=1.4;cx.beginPath();cx.arc(-2,-9,6,.2,2.2);cx.stroke();
+  cx.restore();
 }
 function rr(x,y,w,h,r){cx.beginPath();if(cx.roundRect)cx.roundRect(x,y,w,h,r);else cx.rect(x,y,w,h)}
 function poly(pts,fill){cx.beginPath();for(const p of pts)cx.lineTo(p[0],p[1]);cx.closePath();cx.fillStyle=fill;cx.fill()}
@@ -892,7 +915,9 @@ function render(){
   cx.fillStyle="rgba(255,255,255,.18)";cx.fillRect(0,B+30,W,3);
   for(const r of g.rivers){const a=sx(r[0]),b=sx(r[1]);if(b<0||a>W)continue;
     const wg=cx.createLinearGradient(0,B+28,0,H+camY);wg.addColorStop(0,"#74c0fc");wg.addColorStop(1,"#1c7ed6");cx.fillStyle=wg;rr(a,B+28,b-a,H-B+camY,10);cx.fill();
-    cx.strokeStyle="rgba(255,255,255,.7)";cx.lineWidth=3;for(let k=0;k<3;k++){const yy=B+44+k*14;cx.beginPath();for(let x=a+10;x<b-10;x+=6)cx.lineTo(x,yy+3*Math.sin((x+g.time*60+k*20)/9));cx.stroke()}}
+    cx.strokeStyle="rgba(255,255,255,.7)";cx.lineWidth=3;for(let k=0;k<3;k++){const yy=B+44+k*14;cx.beginPath();for(let x=a+10;x<b-10;x+=6)cx.lineTo(x,yy+3*Math.sin((x+g.time*60+k*20)/9));cx.stroke()}
+    const nd=b-a>140?2:1;for(let k=0;k<nd;k++){const h=hash(r[0]*.13+k*7.7),dx=a+(b-a)*(nd>1?.22+k*.5+h*.1:.5),dy=B+52+k*10+2.5*Math.sin(g.time*3+h*6);
+      cx.save();cx.translate(dx,dy);cx.rotate(.08*Math.sin(g.time*2.5+h*6));rubberDuck(0,0,.85,h<.5?1:-1);cx.restore()}}
   // tunnel backs
   for(const t of g.tunnels){const a=sx(t[0]),b=sx(t[1]);if(b<-100||a>W+100)continue;
     const mg=cx.createLinearGradient(0,B-230,0,B+30);mg.addColorStop(0,"#b9b09a");mg.addColorStop(1,"#8a7f68");cx.fillStyle=mg;
@@ -946,6 +971,12 @@ function render(){
     if(s.v>1){const pulse=.5+.5*Math.sin(g.time*5),hg=cx.createRadialGradient(x,y,2,x,y,30);hg.addColorStop(0,`rgba(165,216,255,${.55+.25*pulse})`);hg.addColorStop(1,"rgba(165,216,255,0)");
       cx.fillStyle=hg;cx.beginPath();cx.arc(x,y,30,0,7);cx.fill()}
     star(x,y,big,Math.sin(g.time*2+s.x)*.3,s.v)}
+  // rescue ducks waiting on the track
+  for(const k of g.ducks){const x=sx(k.x);if(x<-40||x>W+40)continue;const y=B+k.y-RIDE;
+    if(k.got){if(k.t<.5){cx.globalAlpha=1-k.t/.5;rubberDuck(x,y-k.t*120,1.15+k.t,-1);cx.globalAlpha=1}continue}
+    const hg=cx.createRadialGradient(x,y-12,2,x,y-12,30);hg.addColorStop(0,"rgba(255,240,150,.55)");hg.addColorStop(1,"rgba(255,240,150,0)");cx.fillStyle=hg;cx.beginPath();cx.arc(x,y-12,30,0,7);cx.fill();
+    cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(x+2,y,15,3,0,0,7);cx.fill();
+    cx.save();cx.translate(x,y);cx.rotate(.1*Math.sin(g.time*4+k.ph));rubberDuck(0,-Math.abs(Math.sin(g.time*4+k.ph))*3,1.15,-1);cx.restore()}
   // obstacles
   for(const o of g.obs){
     if(!o.hit){cx.fillStyle="rgba(0,0,0,.2)";cx.beginPath();cx.ellipse(sx(o.x)+3,B+o.base-RIDE,o.w*.55,3.5,0,0,7);cx.fill()}
@@ -970,7 +1001,8 @@ function render(){
     const car=(img,wx,wy,a,sz)=>{cx.save();cx.translate(sx(wx),B+wy-RIDE);cx.rotate(a);cx.drawImage(img,-sz.w/2,-sz.h,sz.w,sz.h);cx.restore();return{wy,a}};
     const w2=car(g.imgs.w2,p2.x,p2.y,p2.a,WAG);
     const n=Math.min(g.starsGot,10);cx.save();cx.translate(sx(g.ex+W2),B+w2.wy-RIDE);cx.rotate(w2.a);
-    for(let k=n-1;k>=0;k--){const row=k<5?0:1,col=row?k-5:k;star(-24+col*10+row*4,-36-row*7,6,0)}cx.restore();
+    for(let k=n-1;k>=0;k--){const row=k<5?0:1,col=row?k-5:k;star(-24+col*10+row*4,-36-row*7,6,0)}
+    for(let k=0;k<Math.min(g.ducksGot,3);k++)rubberDuck(18-k*13,-31-(k%2)*3,.55,1);cx.restore();
     car(g.imgs.w1,p1.x,p1.y,p1.a,WAG);
     const ea=g.onGround?Math.atan2(histY(g.ex)-histY(g.ex-20),20):clamp(g.vy/2600,-.3,.3);
     cx.save();cx.translate(sx(g.ex),B+g.y-RIDE);cx.rotate(ea);cx.drawImage(g.imgs.eng,-ENG.w/2,-ENG.h,ENG.w,ENG.h);
@@ -993,14 +1025,14 @@ function render(){
 /* ================= results ================= */
 function results(g){
   const m=Math.floor(g.ex/20),win=g.state==="arrive";
-  const distB=Math.floor(m/100)*2,tripB=win?10+g.level:0,earned=g.starsGot+distB+tripB,before=save.stars;
+  const distB=Math.floor(m/100)*2,tripB=win?10+g.level:0,duckB=g.ducksGot*3,earned=g.starsGot+duckB+distB+tripB,before=save.stars;save.ducks=(save.ducks||0)+g.ducksGot;
   save.stars+=earned;save.runs++;
   let rec=false;if(g.mode==="endless"&&m>save.best){save.best=m;rec=true}
   if(win){save.journey=Math.max(save.journey,g.level+1);save.trips++}
   persist();
   $("#resEmo").textContent=win?"🏆":rec?"🥇":"🚂";
   $("#resTitle").textContent=win?`Journey ${g.level} done!`:g.mode==="endless"?(rec?`New record: ${m} m!`:`You went ${m} m!`):"Great try!";
-  let rows=`<div class="rrow"><span>Stars you caught</span><b>⭐ ${g.starsGot}</b></div><div class="rrow"><span>Distance: ${m} m</span><b>⭐ ${distB}</b></div>`;
+  let rows=`<div class="rrow"><span>Stars you caught</span><b>⭐ ${g.starsGot}</b></div>${g.ducksGot?`<div class="rrow"><span>Rubber ducks rescued 🐤 ×${g.ducksGot}</span><b>⭐ ${duckB}</b></div>`:""}<div class="rrow"><span>Distance: ${m} m</span><b>⭐ ${distB}</b></div>`;
   if(win)rows+=`<div class="rrow"><span>Reached the station!</span><b>⭐ ${tripB}</b></div>`;
   if(g.mode==="endless")rows+=`<div class="rrow"><span>Your best</span><b>${save.best} m</b></div>`;
   $("#resRows").innerHTML=rows;
@@ -1033,7 +1065,7 @@ $("#bPause").onclick=()=>setPause(true);
 $("#bResume").onclick=()=>setPause(false);
 $("#bQuit").onclick=()=>{if(G&&G.started){const g=G;g.state="crash";stopGame();results(g)}else goHome()};
 $("#bMute2").onclick=()=>{save.mute=!save.mute;persist();syncMute()};
-$("#bReset").onclick=()=>{if(confirm("Clear all stars, trains, cards and track pieces and start over?")){Object.assign(save,{stars:0,skin:"red",cards:["shield","magnet"],mode:"journey",journey:1,best:0,runs:0,trips:0});persist();openShed()}};
+$("#bReset").onclick=()=>{if(confirm("Clear all stars, trains, cards and track pieces and start over?")){Object.assign(save,{stars:0,skin:"red",cards:["shield","magnet"],mode:"journey",journey:1,best:0,runs:0,trips:0,ducks:0});persist();openShed()}};
 addEventListener("keydown",e=>{
   if(!G)return;
   if(e.key===" "||e.key==="ArrowUp"||e.key==="w"||e.key==="W"){e.preventDefault();if(!e.repeat)press()}

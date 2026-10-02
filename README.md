@@ -7,6 +7,7 @@ A simple wooden train game with a few other features.
 - Tap the screen (or press **Space** / **↑**) to jump.
 - Hop over ABC blocks, teddies, bouncy balls and gaps in the track.
 - Catch stars as you go. They pile up in the back wagon. Rare **blue stars** are worth 2!
+- Rescue the **rubber ducks** waiting on the track: just roll into them. Each one is worth 3 stars and rides along in the back wagon. More ducks bob in the ponds under the gaps.
 - You have 3 hearts. A bump costs one, and falling in the water makes a splash and bounces you out.
 
 ## Modes
