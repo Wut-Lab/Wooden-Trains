@@ -289,30 +289,46 @@ function ctx(){
   }catch(e){return null}
   return AC;
 }
-function tone(f,d,{type="sine",vol=.12,at=0,to=0}={}){
+// All sounds go through a gentle compressor so overlapping effects never get loud or harsh.
+let OUT=null;
+function out(a){if(!OUT){OUT=a.createDynamicsCompressor();OUT.threshold.value=-18;OUT.ratio.value=4;const m=a.createGain();m.gain.value=.9;OUT.connect(m).connect(a.destination)}return OUT}
+function tone(f,d,{type="sine",vol=.12,at=0,to=0,atk=.02}={}){
   const a=ctx();if(!a)return;const t=a.currentTime+at,o=a.createOscillator(),g=a.createGain();
   o.type=type;o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+atk);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g).connect(out(a));o.start(t);o.stop(t+d+.05);
 }
-function noise(dur,freq,vol,type="bandpass"){
-  const a=ctx();if(!a)return;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=noiseBuf;f.type=type;f.frequency.value=freq;
-  g.gain.setValueAtTime(vol,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+dur);s.connect(f).connect(g).connect(a.destination);s.start();s.stop(a.currentTime+dur+.02);
+function noise(dur,freq,vol,type="bandpass",{at=0,q=1,atk=.004,to=0}={}){
+  const a=ctx();if(!a)return;const t=a.currentTime+at,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();
+  s.buffer=noiseBuf;s.loop=true;f.type=type;f.frequency.setValueAtTime(freq,t);if(to)f.frequency.exponentialRampToValueAtTime(to,t+dur);f.Q.value=q;
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+atk);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f).connect(g).connect(out(a));s.start(t,Math.random()*.3);s.stop(t+dur+.02);
 }
+// A steam whistle is a soft chord with a little "breath" and a quick pitch scoop at the start.
+function toot(len,at=0,vol=1){
+  for(const f of[349,440,523]){tone(f*.94,len,{type:"triangle",vol:.035*vol,at,to:f,atk:.04});tone(f*2,len*.9,{vol:.008*vol,at,atk:.05})}
+  noise(len,1500,.025*vol,"bandpass",{at,q:2,atk:.05});
+}
+const woodKnock=(f,at=0,vol=.12)=>{tone(f,.09,{vol,at,atk:.002});tone(f*2.7,.05,{vol:vol*.35,at,atk:.002})};
 const sfx={
-  chug(){noise(.08,700,.12)},
-  jump(){tone(330,.22,{to:700,type:"triangle",vol:.09})},
-  land(){noise(.06,300,.15,"lowpass")},
-  star(){tone(1319,.12,{vol:.07});tone(1760,.16,{at:.05,vol:.06})},
-  bonk(){tone(180,.25,{to:80,type:"square",vol:.08});noise(.12,400,.25,"lowpass")},
-  splash(){noise(.5,900,.3,"lowpass");tone(500,.3,{to:1200,vol:.05,at:.15})},
-  boing(){tone(220,.35,{to:900,type:"triangle",vol:.1})},
-  whistle(){[587,740,880].forEach(f=>{tone(f*.97,.12,{type:"triangle",vol:.05});tone(f,.75,{type:"triangle",vol:.06,at:.14})})},
-  card(){[523,784,1047].forEach((f,i)=>tone(f,.18,{at:i*.06,type:"triangle",vol:.08}))},
-  pick(){tone(660,.08,{type:"square",vol:.035})},
-  win(){[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.28,{at:i*.14,type:"triangle",vol:.12}))},
-  aww(){[392,370,349].forEach((f,i)=>tone(f,.35,{at:i*.25,type:"triangle",vol:.08}))},
-  unlock(){[784,988,1175,1568,1976].forEach((f,i)=>tone(f,.25,{at:.1+i*.08,vol:.08}))},
+  // steam "chuff": a puff of filtered noise; accents make the chuff-a-chuff rhythm
+  chuff(acc=1){noise(.14,1000,.09*acc,"bandpass",{q:.7,to:600});noise(.1,260,.05*acc,"lowpass")},
+  // wheels going over a wooden track joint
+  clack(at=0,vol=1){woodKnock(900,at,.03*vol);noise(.025,3200,.03*vol,"highpass",{at,atk:.001})},
+  jump(){noise(.22,2600,.07,"highpass",{atk:.01});tone(392,.16,{to:740,type:"triangle",vol:.06})},
+  land(){woodKnock(220,0,.16);woodKnock(330,.03,.07)},
+  star(){tone(1760,.4,{vol:.05,atk:.003});tone(1760*2.76,.18,{vol:.015,atk:.003});tone(2637,.3,{vol:.03,at:.06,atk:.003})},
+  bonk(){woodKnock(260,0,.22);woodKnock(190,.06,.16);tone(150,.25,{to:70,vol:.07})},
+  splash(){noise(.5,1200,.22,"lowpass",{to:400,atk:.01});[700,950,1250].forEach((f,i)=>tone(f,.07,{to:f*1.6,vol:.04,at:.18+i*.08,atk:.005}))},
+  boing(){tone(330,.5,{to:1400,type:"triangle",vol:.07,atk:.03})},
+  whistle(){toot(.22);toot(.6,.3)},
+  toot(){toot(.25,0,.8)},
+  bell(){[0,.32,.64].forEach(at=>{tone(1319,.6,{vol:.05,at,atk:.002});tone(1319*2.4,.3,{vol:.015,at,atk:.002})})},
+  card(){[784,1047,1319,1568].forEach((f,i)=>tone(f,.22,{at:i*.05,vol:.05,atk:.005}));noise(.3,6000,.02,"highpass",{atk:.02})},
+  pick(){woodKnock(620,0,.08)},
+  win(){sfx.bell();[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.28,{at:.9+i*.14,type:"triangle",vol:.09}))},
+  aww(){[392,370,349].forEach((f,i)=>tone(f,.35,{at:i*.25,type:"triangle",vol:.07}));toot(.7,.8,.6)},
+  unlock(){[784,988,1175,1568,1976].forEach((f,i)=>tone(f,.25,{at:.1+i*.08,vol:.06}))},
 };
 
 /* ================= train art (SVG) ================= */
@@ -615,7 +631,7 @@ async function startRun(){
   show("sGame");resize();
   G={mode:save.mode,level:save.journey,imgs,ex:200,y:0,vy:0,onGround:true,coyote:-9,jumpBuf:0,time:0,
      pieces:[],gaps:[],stars:[],obs:[],rivers:[],tunnels:[],rails:[],ramps:[],parts:[],hist:[],genX:-400,done:false,
-     goalPlan:(300+100*(save.journey-1))*20,goalX:Infinity,hearts:3,invuln:0,shake:0,starsGot:0,spd:0,camY:0,wheelA:0,skin:skin(),
+     goalPlan:(300+100*(save.journey-1))*20,goalX:Infinity,hearts:3,invuln:0,shake:0,starsGot:0,spd:0,camY:0,beat:0,wheelA:0,skin:skin(),
      fx:{shield:0,magnet:0,turbo:0,snail:0,wings:0},cards:myCards().map(id=>({id,used:false})),
      state:"run",endT:0,chugT:0,smokeT:0,nextMile:100,paused:false,started:false,sunk:false};
   addPiece("flat",1000);
@@ -728,14 +744,18 @@ function update(dt){
   g.smokeT-=d;if(g.smokeT<=0&&g.spd>0){g.smokeT=g.fx.turbo>0?.04:.09;spawn(g.ex+16,g.y-64,1,"smoke",{vx:-30,vy:-60,spread:20,life:1,r:7})}
   if(g.fx.turbo>0)spawn(g.ex-150,g.y-20,1,"spark",{vx:-200,color:pick(["#ff922b","#ffd43b","#ff6b6b"]),spread:60,life:.35,r:6});
   if(g.fx.wings>0)spawn(g.ex-150,g.y-24,1,"spark",{vx:-100,color:pick(["#ff6b6b","#ffd43b","#69db7c","#4dabf7","#b197fc"]),spread:20,life:.7,r:7});
-  g.chugT-=d;if(g.chugT<=0&&g.spd>40&&g.onGround){g.chugT=70/g.spd;sfx.chug()}
+  g.chugT-=d;if(g.chugT<=0&&g.spd>40&&g.onGround){g.chugT=70/g.spd;sfx.chuff([1,.45,.7,.45][g.beat++%4])}
+  // clickety-clack: each pair of wheels rolls over the joint a moment after the one in front
+  if(g.onGround&&g.spd>40&&Math.floor(g.ex/120)!==Math.floor(px/120)&&groundH(Math.floor(g.ex/120)*120,false)!==null)
+    [[0,1],[48,.7],[80,.8],[104,.6],[139,.8],[163,.6]].forEach(([o,v])=>sfx.clack(o/g.spd,v));
+  for(const t of g.tunnels)if(px<t[0]&&g.ex>=t[0]&&g.state==="run")sfx.toot();
   for(const p of g.parts){p.life-=d;p.x+=p.vx*d;p.y+=p.vy*d;if(p.kind==="dust"||p.kind==="drop")p.vy+=700*d;if(p.kind==="conf")p.vy+=200*d}
   g.parts=g.parts.filter(p=>p.life>0);
 
   // ---- goals
-  if(g.state==="run"&&g.mode==="journey"&&g.ex>=g.goalX){g.state="arrive";sfx.whistle();setTimeout(()=>G&&sfx.win(),500);banner("You made it to the station! 🎉",3000);
+  if(g.state==="run"&&g.mode==="journey"&&g.ex>=g.goalX){g.state="arrive";sfx.whistle();setTimeout(()=>G&&sfx.win(),700);banner("You made it to the station! 🎉",3000);
     for(let i=0;i<60;i++)spawn(g.ex-100+Math.random()*V.W*.8,-V.base-20-Math.random()*200,1,"conf",{vy:120,spread:100,life:3,e:pick(["🎉","⭐","🎊","🌟","🎈"])})}
-  if(g.mode==="endless"&&g.state==="run"&&g.ex/20>=g.nextMile){banner(`${g.nextMile} m! Keep going! 🎉`,1500);sfx.card();g.nextMile+=100}
+  if(g.mode==="endless"&&g.state==="run"&&g.ex/20>=g.nextMile){banner(`${g.nextMile} m! Keep going! 🎉`,1500);sfx.whistle();g.nextMile+=100}
   // ---- tidy
   const cut=g.ex-V.W;
   if(g.pieces.length>4&&g.pieces[0].x1<cut)g.pieces.shift();
@@ -823,12 +843,21 @@ function cloud(x,y){cx.fillStyle="#d9ecfa";cx.beginPath();cx.arc(x,y+6,24,0,7);c
 
 // Wagons follow the engine's path, but stay coupled: never more than a short hop from the car ahead,
 // and never sinking into a block or below the track while being pulled along.
-function wagonYs(g){
-  const floor=wx=>{let f=-(groundH(wx,true)||0);for(const o of g.obs)if(!o.hit&&Math.abs(o.x-wx)<o.w/2+30)f=Math.min(f,o.base-o.h-2);return f};
-  if(g.y>20)return[histY(g.ex+W1),histY(g.ex+W2)];
-  const y1=Math.min(clamp(histY(g.ex+W1),g.y-26,g.y+26),floor(g.ex+W1));
-  const y2=Math.min(clamp(histY(g.ex+W2),y1-26,y1+26),floor(g.ex+W2));
-  return[y1,y2];
+function wagonPoses(g){
+  const hw=WAG.w/2;
+  // highest block top under any part of the wagon (or the track, if there's no block)
+  const floor=wx=>{let f=-(groundH(wx,true)||0),over=false;
+    for(const o of g.obs)if(!o.hit&&o.kind!=="ball"&&Math.abs(o.x-wx)<o.w/2+hw+2){const t=o.base-o.h-3;if(t<f){f=t;over=true}}return{f,over}};
+  const poses=[];let ax=g.ex,ay=g.y;
+  for(const dx of[W1,W2]){
+    const wx=g.ex+dx;let y=histY(wx);
+    if(g.y<=20)y=clamp(y,ay-26,ay+26);
+    const fl=floor(wx);if(y>fl.f)y=fl.f;
+    let a=clamp(Math.atan2(ay-y,ax-wx),-.4,.4);
+    if(fl.over){const lim=Math.asin(clamp((fl.f-y)/hw,0,1));a=clamp(a,-lim,lim)}
+    poses.push({x:wx,y,a});ax=wx;ay=y;
+  }
+  return poses;
 }
 function render(){
   const g=G,W=V.W,H=V.H,B=V.base,P=woods();
@@ -921,16 +950,16 @@ function render(){
         abcBlock(X,Y+d-3,bw,bh,o.blocks[k],d,pat(P.block,0))}}
     cx.restore()}
   // train: soft shadows on the track, then wagons and engine
-  for(const [dx,w] of[[W2,WAG.w],[W1,WAG.w],[0,ENG.w]]){const wx=g.ex+dx,h=groundH(wx,g.fx.turbo>0);if(h===null)continue;const wy=dx?wagonYs(g)[dx===W1?0:1]:g.y,up=clamp((-h-wy)/220,0,1),a=1-up*.7;
+  for(const [dx,w] of[[W2,WAG.w],[W1,WAG.w],[0,ENG.w]]){const wx=g.ex+dx,h=groundH(wx,g.fx.turbo>0);if(h===null)continue;const wy=dx?wagonPoses(g)[dx===W1?0:1].y:g.y,up=clamp((-h-wy)/220,0,1),a=1-up*.7;
     cx.fillStyle=`rgba(40,20,0,${.28*a})`;cx.beginPath();cx.ellipse(sx(wx)+3,B-h-RIDE+1,w*.46*a,4*a,0,0,7);cx.fill()}
   const blink=g.invuln>0&&!(g.fx.shield>0)&&Math.floor(g.time*12)%2===0;
   if(!blink){
-    const [y1,y2]=wagonYs(g),wx1=g.ex+W1,wx2=g.ex+W2;
+    const [p1,p2]=wagonPoses(g);
     const car=(img,wx,wy,a,sz)=>{cx.save();cx.translate(sx(wx),B+wy-RIDE);cx.rotate(a);cx.drawImage(img,-sz.w/2,-sz.h,sz.w,sz.h);cx.restore();return{wy,a}};
-    const w2=car(g.imgs.w2,wx2,y2,clamp(Math.atan2(y1-y2,W1-W2),-.4,.4),WAG);
+    const w2=car(g.imgs.w2,p2.x,p2.y,p2.a,WAG);
     const n=Math.min(g.starsGot,10);cx.save();cx.translate(sx(g.ex+W2),B+w2.wy-RIDE);cx.rotate(w2.a);
     for(let k=n-1;k>=0;k--){const row=k<5?0:1,col=row?k-5:k;star(-24+col*10+row*4,-36-row*7,6,0)}cx.restore();
-    car(g.imgs.w1,wx1,y1,clamp(Math.atan2(g.y-y1,-W1),-.4,.4),WAG);
+    car(g.imgs.w1,p1.x,p1.y,p1.a,WAG);
     const ea=g.onGround?Math.atan2(histY(g.ex)-histY(g.ex-20),20):clamp(g.vy/2600,-.3,.3);
     cx.save();cx.translate(sx(g.ex),B+g.y-RIDE);cx.rotate(ea);cx.drawImage(g.imgs.eng,-ENG.w/2,-ENG.h,ENG.w,ENG.h);
     cx.scale(.765,.765);cx.translate(-135,-82);steamGear(cx,g.skin,g.wheelA);cx.restore();
