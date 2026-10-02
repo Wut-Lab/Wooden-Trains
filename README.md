@@ -6,7 +6,7 @@ A simple wooden train game with a few other features.
 ## How to play
 - Tap the screen (or press **Space** / **↑**) to jump.
 - Hop over ABC blocks, teddies, bouncy balls and gaps in the track.
-- Catch stars as you go. They pile up in the back wagon.
+- Catch stars as you go. They pile up in the back wagon. Rare **blue stars** are worth 2!
 - You have 3 hearts. A bump costs one, and falling in the water makes a splash and bounces you out.
 
 ## Modes
