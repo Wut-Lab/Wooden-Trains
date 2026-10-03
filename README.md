@@ -8,7 +8,7 @@ A simple wooden train game with a few other features.
 - Hop over ABC blocks, teddies, bouncy balls and gaps in the track.
 - Catch stars as you go. They pile up in the back wagon. Rare **blue stars** are worth 2!
 - Rescue the **rubber ducks** waiting on the track: just roll into them. Each one is worth 3 stars and rides along in the back wagon. More ducks bob in the ponds under the gaps.
-- Keep an eye out for **special ducks**: 16 rare collectible ducks (Dragon, Zombie, Unicorn, Gold, Cowboy, Robin Hood, Knight, Punk, Chess and more). Each one you find appears in the **Special Ducks** collection on the main menu.
+- Keep an eye out for **special ducks**: 20 rare collectible ducks (Dragon, Zombie, Unicorn, Gold, Bigfoot, Psychic, Invisible, Fancy, Chess and more). Each one you find appears in the **Special Ducks** collection on the main menu. Tap a duck there to read about it.
 - You have 3 hearts. A bump costs one, and falling in the water makes a splash and bounces you out.
 
 ## Modes

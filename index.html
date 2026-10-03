@@ -53,6 +53,14 @@ h1,h2,h3{margin:0;font-weight:700}
 .ducktile.locked{color:#9a8a70}
 .ducktile.fresh::after{content:"NEW!";position:absolute;top:-8px;right:-6px;background:#ff5fa2;color:#fff;border-radius:99px;padding:1px 10px;font-size:.8rem}
 @media (max-width:560px){.duckgrid{grid-template-columns:repeat(2,1fr)}}
+.duckcard{position:fixed;inset:0;background:rgba(40,30,20,.45);display:grid;place-items:center;padding:16px;z-index:10}
+.dcpanel{background:var(--panel);border-radius:26px;padding:18px 20px 20px;width:min(340px,100%);text-align:center;box-shadow:0 6px 0 #e2cf9a,0 18px 40px rgba(0,0,0,.25);animation:pop .35s}
+.dcpanel canvas{width:100%;aspect-ratio:320/230;border-radius:18px;background:radial-gradient(circle at 50% 60%,#fff9db,#ffe8a3);display:block}
+.dcpanel.locked canvas{background:radial-gradient(circle at 50% 60%,#e7f5ff,#d0ebff)}
+.dcpanel h3{margin:12px 0 4px;font-size:1.5rem}
+.dcpanel p{margin:0 0 6px;font-size:1.1rem;line-height:1.35}
+.dcpanel small{display:block;opacity:.6;font-weight:600;margin-bottom:14px}
+.dcpanel .btn{font-size:1.15rem;padding:10px 26px}
 .next{max-width:440px;margin:22px auto 0;background:var(--panel);border-radius:20px;padding:12px 16px;box-shadow:0 4px 0 #e8d8b0;display:flex;align-items:center;gap:12px;text-align:left}
 .next .thumb{width:84px;height:46px;flex:none;display:grid;place-items:center;font-size:2rem}
 .next .thumb svg{width:100%;height:100%}
@@ -188,6 +196,15 @@ h1,h2,h3{margin:0;font-weight:700}
   <div class="top"><button class="mini" data-home aria-label="Home">🏠</button><h2>Special Ducks</h2><div class="starchip">🐤 <span id="duckFound">0</span>/<span id="duckTotal">16</span></div></div>
   <p class="duckHint" id="duckHint"></p>
   <div class="duckgrid" id="duckGrid"></div>
+  <div class="duckcard" id="duckCard" hidden>
+    <div class="dcpanel" role="dialog" aria-modal="true" aria-labelledby="dcName">
+      <canvas id="dcCanvas" width="320" height="230"></canvas>
+      <h3 id="dcName"></h3>
+      <p id="dcDesc"></p>
+      <small id="dcCount"></small>
+      <button class="btn blue" id="dcBack">⬅ Back</button>
+    </div>
+  </div>
 </section>
 
 <!-- TOY BOX -->
@@ -273,14 +290,29 @@ const CARDS={
   wings: {name:"Rainbow Wings",icon:"🌈",color:"#fff",desc:"Fly over everything",dur:6,need:650,rainbow:true},
 };
 const SLOT3={need:220};
-// 16 collectible special ducks. They turn up rarely on the track; ones you haven't found yet turn up more often.
+// 20 collectible special ducks. They turn up rarely on the track; ones you haven't found yet turn up more often.
+// w = how likely it is to turn up (1 = normal, .5 = twice as rare).
 const SPECIAL_DUCKS=[
-  {id:"dragon",name:"Dragon Duck"},{id:"zombie",name:"Zombie Duck"},{id:"unicorn",name:"Unicorn Duck"},
-  {id:"gold",name:"Gold Duck",w:.5},{id:"cowboy",name:"Cowboy Duck"},{id:"robin",name:"Robin Hood Duck"},
-  {id:"knight",name:"Knight Duck"},{id:"punk",name:"Punk Duck"},{id:"pirate",name:"Pirate Duck"},
-  {id:"astro",name:"Astronaut Duck"},{id:"wizard",name:"Wizard Duck"},{id:"ninja",name:"Ninja Duck"},
-  {id:"princess",name:"Princess Duck"},{id:"fire",name:"Firefighter Duck"},{id:"conductor",name:"Conductor Duck"},
-  {id:"chess",name:"Chess Duck"},
+  {id:"dragon",name:"Dragon Duck",desc:"Breathes tiny puffs of fire. Just enough to toast a marshmallow!"},
+  {id:"zombie",name:"Zombie Duck",desc:"Waddles very slowly and loves to munch on bread crumbs. Brains? No thanks!"},
+  {id:"unicorn",name:"Unicorn Duck",desc:"Leaves a little rainbow wherever it waddles."},
+  {id:"gold",name:"Gold Duck",w:.5,desc:"Super rare and super shiny. Some say it brings good luck!"},
+  {id:"cowboy",name:"Cowboy Duck",desc:"Yee-haw! Rides the rails from sunrise to sunset."},
+  {id:"robin",name:"Robin Hood Duck",desc:"Catches stars with a single arrow and shares them with everyone."},
+  {id:"knight",name:"Knight Duck",desc:"Brave and loyal. Guards the train with its trusty shield."},
+  {id:"punk",name:"Punk Duck",desc:"Plays super loud songs on a tiny guitar. Rock on!"},
+  {id:"pirate",name:"Pirate Duck",desc:"Arr! Searches every track for buried treasure."},
+  {id:"astro",name:"Astronaut Duck",desc:"Has been to the moon and back. Twice!"},
+  {id:"wizard",name:"Wizard Duck",desc:"Knows a spell to make blocks float... most of the time."},
+  {id:"ninja",name:"Ninja Duck",desc:"So sneaky you'll never hear it squeak. Shhh!"},
+  {id:"princess",name:"Princess Duck",desc:"Rules the bath-time kingdom with kindness."},
+  {id:"fire",name:"Firefighter Duck",desc:"Always ready to help. Puts out fires with one big splash!"},
+  {id:"conductor",name:"Conductor Duck",desc:"All aboard! Makes sure every train leaves right on time."},
+  {id:"chess",name:"Chess Duck",desc:"Always thinks three moves ahead. Its favorite piece is the rook."},
+  {id:"psychic",name:"Psychic Duck",desc:"It knew you were going to find it before you did."},
+  {id:"bigfoot",name:"Bigfoot Duck",w:.5,desc:"Hardly anyone has ever seen it. Big feet, fuzzy fur, friendly smile."},
+  {id:"invisible",name:"Invisible Duck",desc:"You can't see it... but it's definitely here. Probably."},
+  {id:"fancy",name:"Fancy Duck",desc:"Takes its bath water with a pinkie raised. How very fancy!"},
 ];
 const JUMP=760,GRAV=2000;
 
@@ -500,6 +532,7 @@ function makePiece(id,r,s,d=0){
 
 /* ================= menus ================= */
 function show(id){
+  const dc=document.getElementById("duckCard");if(dc)dc.hidden=true;
   for(const s of $$("section"))s.hidden=s.id!==id;
   scrollTo(0,0);
   $$(".starsNow").forEach(e=>e.textContent=save.stars);
@@ -600,7 +633,7 @@ function openDucks(){
     b.innerHTML=`<canvas width="240" height="180"></canvas><span>${n?d.name:"???"}</span><small>${n?(n>1?`Found ×${n}`:"Found!"):"Not found yet"}</small>`;
     b.setAttribute("aria-label",n?d.name:"Special duck not found yet");
     const tile={d,n,c:b.querySelector("canvas").getContext("2d"),hop:-9};
-    if(n)b.onclick=()=>{tile.hop=performance.now()/1000;sfx.squeak()};
+    b.onclick=()=>{if(n){tile.hop=performance.now()/1000;sfx.squeak()}else sfx.pick();openDuckCard(tile)};
     grid.appendChild(b);return tile});
   save.newDucks=[];persist();
   show("sDucks");
@@ -611,9 +644,27 @@ function openDucks(){
       const hop=Math.max(0,1-(t-tl.hop)/.5),hy=Math.sin(hop*Math.PI)*28;
       c.fillStyle="rgba(0,0,0,.12)";c.beginPath();c.ellipse(112,160,46-hy*.4,7,0,0,7);c.fill();
       c.save();c.translate(112,158-hy-Math.abs(Math.sin(t*2+tl.d.id.length))*4);c.rotate(.06*Math.sin(t*1.6+tl.d.id.length));drawDuck(c,tl.d.id,0,0,3.4,1,t);c.restore()}
+    if(card&&!$("#duckCard").hidden){const c=card.c,hop=Math.max(0,1-(t-card.hop)/.5),hy=Math.sin(hop*Math.PI)*30;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,320,230);
+      if(!card.n){duckSilhouette(c,150,200,4.4);c.fillStyle="#fffaf0";c.font="bold 72px Fredoka,sans-serif";c.textAlign="center";c.textBaseline="middle";c.fillText("?",150,158)}
+      else{c.fillStyle="rgba(0,0,0,.12)";c.beginPath();c.ellipse(150,204,60-hy*.4,8,0,0,7);c.fill();
+        c.save();c.translate(150,202-hy-Math.abs(Math.sin(t*2))*5);c.rotate(.06*Math.sin(t*1.6));drawDuck(c,card.d.id,0,0,4.4,1,t);c.restore()}}
     duckAnim=requestAnimationFrame(frame)};
   frame();
 }
+// Tapping a duck opens a little card with its picture, name and description.
+let card=null,cardReturn=null;
+function openDuckCard(tile){
+  card={d:tile.d,n:tile.n,c:$("#dcCanvas").getContext("2d"),hop:tile.n?performance.now()/1000:-9};cardReturn=document.activeElement;
+  $("#dcName").textContent=tile.n?tile.d.name:"???";
+  $("#dcDesc").textContent=tile.n?tile.d.desc:"This duck is still hiding somewhere on the track. Keep riding to find it!";
+  $("#dcCount").textContent=tile.n?(tile.n>1?`Found ${tile.n} times`:"Found once"):"Not found yet";
+  $(".dcpanel").classList.toggle("locked",!tile.n);
+  $("#duckCard").hidden=false;$("#dcBack").focus();
+}
+function closeDuckCard(){if($("#duckCard").hidden)return;$("#duckCard").hidden=true;sfx.pick();if(cardReturn&&cardReturn.focus)cardReturn.focus()}
+$("#dcBack").onclick=closeDuckCard;
+$("#duckCard").addEventListener("click",e=>{if(e.target.id==="duckCard")closeDuckCard()});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#duckCard").hidden)closeDuckCard()});
 function updateDuckButton(){const n=SPECIAL_DUCKS.filter(d=>save.specials[d.id]).length;$("#duckCount").textContent=`${n} of ${SPECIAL_DUCKS.length} found`}
 function openShed(){
   const un=ALL_UNLOCKS.filter(has).length;
@@ -916,6 +967,8 @@ function duckFill(c,k){
     case"astro":return rg("#ffffff","#e9ecef","#9aa3ad");
     case"gold":{const g=c.createLinearGradient(-16,-30,12,2);g.addColorStop(0,"#fffbe6");g.addColorStop(.22,"#ffd43b");g.addColorStop(.48,"#e8890c");g.addColorStop(.68,"#ffe066");g.addColorStop(1,"#a8740a");return g}
     case"unicorn":{const g=c.createLinearGradient(-18,0,16,-30);["#ff8787","#ffc078","#ffe066","#8ce99a","#74c0fc","#b197fc"].forEach((col,i)=>g.addColorStop(i/5,col));return g}
+    case"psychic":return rg("#e5dbff","#9775fa","#5f3dc4");
+    case"bigfoot":return rg("#d9a87a","#9c6b3a","#5c3a1e");
     case"chess":{const pt=c.createPattern(CHECKS,"repeat");if(pt.setTransform)pt.setTransform(new DOMMatrix().scale(.125));return pt}
     default:return rg("#fff8b8","#ffd43b","#f08c00");
   }
@@ -927,8 +980,8 @@ function spark4(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.moveTo(x,y-r);c.qua
 function drawDuck(c,k,x,y,s=1,f=1,t=0){
   c.save();c.translate(x,y);
   // auras sit behind the duck and are not mirrored
-  if(k==="punk"||k==="gold"){const p=.75+.25*Math.sin(t*3),col=k==="punk"?"255,40,40":"255,215,80",g=c.createRadialGradient(0,-14*s,3,0,-14*s,30*s);
-    g.addColorStop(0,`rgba(${col},${(k==="punk"?.38:.3)*p})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.beginPath();c.arc(0,-14*s,30*s,0,7);c.fill()}
+  if(k==="punk"||k==="gold"||k==="psychic"){const p=.75+.25*Math.sin(t*3),col={punk:"255,40,40",gold:"255,215,80",psychic:"210,190,255"}[k],g=c.createRadialGradient(0,-14*s,3,0,-14*s,30*s);
+    g.addColorStop(0,`rgba(${col},${({punk:.38,gold:.3,psychic:.5})[k]*p})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.beginPath();c.arc(0,-14*s,30*s,0,7);c.fill()}
   c.scale(s*f,s);
   const OUT="rgba(110,60,0,.45)";
   // ---- behind the body
@@ -939,7 +992,20 @@ function drawDuck(c,k,x,y,s=1,f=1,t=0){
   if(k==="astro"){c.fillStyle="#adb5bd";c.beginPath();c.roundRect?c.roundRect(-19,-22,8,13,2):c.rect(-19,-22,8,13);c.fill();c.fillStyle="#868e96";c.fillRect(-18,-19,6,2)}
   if(k==="ninja"){const w=Math.sin(t*8)*2;c.strokeStyle="#e03131";c.lineWidth=2.4;c.lineCap="round";
     c.beginPath();c.moveTo(-1,-24);c.quadraticCurveTo(-8,-26+w,-14,-22-w);c.stroke();c.beginPath();c.moveTo(-1,-23);c.quadraticCurveTo(-7,-20-w,-12,-16+w);c.stroke()}
+  // shaggy fur: a ring of tufts behind the body and head, so only a fuzzy edge shows
+  if(k==="bigfoot"){c.fillStyle="#6b4423";
+    for(let i=0;i<22;i++){const a=i/22*Math.PI*2;if(Math.sin(a)>.55)continue;c.beginPath();c.arc(Math.cos(a)*14.6,-8+Math.sin(a)*8.9,2.4,0,7);c.fill()}
+    for(let i=0;i<16;i++){const a=i/16*Math.PI*2;if(Math.cos(a)>.55&&Math.sin(a)>-.6)continue;c.beginPath();c.arc(6+Math.cos(a)*7.8,-21+Math.sin(a)*7.8,2.1,0,7);c.fill()}
+    c.beginPath();c.moveTo(-11,-9);c.lineTo(-19.5,-20.5);c.lineTo(-6,-14);c.closePath();c.fill()}
   // ---- the rubber duck itself
+  if(k==="invisible"){const p=.6+.4*Math.sin(t*2.4);
+    c.shadowColor=`rgba(150,225,255,${.95*p})`;c.shadowBlur=7*s;c.strokeStyle=`rgba(215,245,255,${.55+.4*p})`;c.lineWidth=1.3;c.lineJoin="round";c.fillStyle="rgba(210,240,255,.07)";
+    c.beginPath();c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath();c.fill();c.stroke();
+    c.beginPath();c.ellipse(0,-8,14,8.5,0,0,7);c.fill();c.stroke();
+    c.beginPath();c.arc(6,-21,7.5,0,7);c.fill();c.stroke();
+    c.beginPath();c.ellipse(14,-20,5,2.4,.1,0,7);c.stroke();
+    c.lineWidth=1;c.beginPath();c.arc(8.5,-23,1.5,0,7);c.stroke();c.beginPath();c.arc(-2,-9,6,.2,2.2);c.stroke();
+    c.restore();return}
   c.fillStyle=duckFill(c,k);c.strokeStyle=OUT;c.lineWidth=1;
   c.beginPath();c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath();c.fill();c.stroke();
   c.beginPath();c.ellipse(0,-8,14,8.5,0,0,7);c.fill();c.stroke();
@@ -990,9 +1056,18 @@ function drawDuck(c,k,x,y,s=1,f=1,t=0){
       c.fillStyle="#e03131";c.beginPath();c.moveTo(4,-30);c.quadraticCurveTo(-4,-38,-10,-31);c.quadraticCurveTo(-3,-33,4,-28);c.fill();
       c.fillStyle="#1971c2";c.beginPath();c.moveTo(-5,-15);c.lineTo(5,-15);c.lineTo(5,-8);c.quadraticCurveTo(0,-1,0,-1);c.quadraticCurveTo(-5,-4,-5,-8);c.closePath();c.fill();
       c.strokeStyle="#ffd43b";c.lineWidth=1.3;c.beginPath();c.moveTo(0,-14);c.lineTo(0,-4);c.moveTo(-4,-10);c.lineTo(4,-10);c.stroke();break}
-    case"punk":
-      for(let i=0;i<5;i++)tri(c,[[-1+i*2.8,-27.4+Math.abs(i-2)*.5],[.2+i*2.8,-35-(i===2?2:0)+Math.abs(i-2)],[1.6+i*2.8,-27.4+Math.abs(i-2)*.5]],i%2?"#c2255c":"#e03131");
-      c.fillStyle="#141517";c.fillRect(-1,-15.5,12,2.6);c.fillStyle="#dee2e6";for(let i=0;i<4;i++){c.beginPath();c.arc(1+i*3,-14.2,.7,0,7);c.fill()}break;
+    case"punk":{
+      // a tall pink-to-red mohawk running front to back over the head, spikes leaning back
+      const hx=6,hy=-21,r=7.2,a0=Math.PI*1.18,a1=Math.PI*1.7,n=6,g=c.createLinearGradient(0,-41,0,-26);g.addColorStop(0,"#ff4dc4");g.addColorStop(1,"#e03131");
+      c.fillStyle=g;c.beginPath();c.moveTo(hx+Math.cos(a0)*r,hy+Math.sin(a0)*r);
+      for(let i=0;i<n;i++){const am=a0+(a1-a0)*(i+.5)/n,ab=a0+(a1-a0)*(i+1)/n,len=r+6+(i===2||i===3?2.5:i===1||i===4?1.2:0);
+        c.lineTo(hx+Math.cos(am-.1)*len,hy+Math.sin(am-.1)*len);c.lineTo(hx+Math.cos(ab)*r,hy+Math.sin(ab)*r)}
+      c.closePath();c.fill();c.strokeStyle="rgba(120,0,40,.35)";c.lineWidth=.6;c.stroke();
+      // choker: a black band snug around the neck with a little silver ring
+      c.strokeStyle="#141517";c.lineWidth=2.6;c.lineCap="round";c.beginPath();c.moveTo(.6,-15.4);c.quadraticCurveTo(6.2,-12.6,11.8,-15.4);c.stroke();
+      c.fillStyle="#dee2e6";for(const sx2 of[2.6,9.8]){c.beginPath();c.arc(sx2,-14.4,.55,0,7);c.fill()}
+      c.strokeStyle="#ced4da";c.lineWidth=.9;c.beginPath();c.arc(6.2,-11.9,1.5,0,7);c.stroke();
+      break}
     case"pirate":
       c.fillStyle="#212529";c.beginPath();c.moveTo(-5,-26);c.quadraticCurveTo(6,-33,17,-26);c.quadraticCurveTo(11,-29,6,-37);c.quadraticCurveTo(1,-29,-5,-26);c.fill();
       c.fillStyle="#fff";c.beginPath();c.arc(6,-30,1.6,0,7);c.fill();c.fillStyle="#212529";c.fillRect(5.2,-30.2,.6,.6);c.fillRect(6.4,-30.2,.6,.6);break;
@@ -1034,6 +1109,30 @@ function drawDuck(c,k,x,y,s=1,f=1,t=0){
       for(const bx of[.8,4.75,8.7])c.fillRect(bx,-40.6,2.5,3.2);
       c.fillStyle="rgba(255,255,255,.28)";c.fillRect(3.2,-35,1.1,6.6);c.fillRect(1.3,-37.2,1,1.8);
       c.strokeStyle="rgba(255,255,255,.18)";c.lineWidth=.5;c.beginPath();c.moveTo(.8,-35.2);c.lineTo(11.2,-35.2);c.stroke();
+      break}
+    case"psychic":{
+      // a little glowing gem on the forehead and faint yellow bubbles drifting up from the head
+      c.fillStyle="#ffd43b";c.beginPath();c.moveTo(5,-29.4);c.lineTo(6.4,-27.6);c.lineTo(5,-25.8);c.lineTo(3.6,-27.6);c.closePath();c.fill();
+      for(let i=0;i<4;i++){const ph=(t*.55+i/4)%1,bx=5+Math.sin(t*1.7+i*2.2)*3.5+(i-1.5)*1.6,by=-30-ph*20,a=Math.sin(ph*Math.PI)*.7;
+        c.strokeStyle=`rgba(255,226,110,${a})`;c.fillStyle=`rgba(255,240,170,${a*.35})`;c.lineWidth=.7;c.beginPath();c.arc(bx,by,1.2+ph*1.6,0,7);c.fill();c.stroke()}
+      break}
+    case"bigfoot":{
+      // fluffy fur tufts around the edge (not over the face), two little fangs, and of course: big feet
+      c.strokeStyle="rgba(240,200,150,.45)";c.lineWidth=.8;c.lineCap="round";
+      for(const [fx,fy] of[[-8,-9],[-4,-4],[1,-7],[4,-3],[-10,-4],[-1,-12],[3,-25],[1,-21]]){c.beginPath();c.moveTo(fx-1,fy+.6);c.quadraticCurveTo(fx,fy-1.4,fx+1,fy+.6);c.stroke()}
+      c.fillStyle="#fff";for(const fx of[11.6,14.8]){c.beginPath();c.moveTo(fx-.75,-18.6);c.lineTo(fx+.75,-18.6);c.lineTo(fx,-15.4);c.closePath();c.fill()}
+      for(const [fx,fy] of[[-4,.6],[6,.8]]){c.fillStyle="#5c3a1e";c.beginPath();c.ellipse(fx,fy,6.6,2.5,0,0,7);c.fill();
+        c.fillStyle="#7a5232";for(let i=0;i<3;i++){c.beginPath();c.arc(fx+2.1+i*1.4,fy-1.5,1,0,7);c.fill()}}
+      break}
+    case"fancy":{
+      // a tall black top hat with a ribbon, a gold monocle and its little chain
+      const hg=c.createLinearGradient(0,0,12,0);hg.addColorStop(0,"#495057");hg.addColorStop(.35,"#212529");hg.addColorStop(1,"#0b0c0d");
+      c.fillStyle="#141517";c.beginPath();c.ellipse(6,-27.6,9.2,1.9,-.05,0,7);c.fill();
+      c.fillStyle=hg;c.beginPath();c.roundRect?c.roundRect(1,-41,10.4,13.6,1.2):c.rect(1,-41,10.4,13.6);c.fill();
+      c.fillStyle="#141517";c.beginPath();c.ellipse(6.2,-41,5.2,1.3,0,0,7);c.fill();
+      c.fillStyle="#9c36b5";c.fillRect(1,-31,10.4,2.4);c.fillStyle="rgba(255,255,255,.2)";c.fillRect(2.4,-40,1,8.6);
+      c.strokeStyle="#e8b400";c.lineWidth=.9;c.fillStyle="rgba(230,245,255,.35)";c.beginPath();c.arc(8.5,-23,3.1,0,7);c.fill();c.stroke();
+      c.lineWidth=.5;c.beginPath();c.moveTo(10.6,-20.8);c.quadraticCurveTo(12,-14,8,-10.5);c.stroke();
       break}
     case"conductor":
       c.fillStyle="#1c3d8f";c.beginPath();c.roundRect?c.roundRect(-1,-34,13,7.5,2):c.rect(-1,-34,13,7.5);c.fill();
