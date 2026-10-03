@@ -715,8 +715,8 @@ function addPiece(id,len){
   for(const g of pc.gaps)G.gaps.push(g);
   // A rubber duck waiting on the track to be rescued: just roll into it.
   if((id==="flat"||id==="tunnel")&&!len&&Math.random()<.35){const lx=id==="tunnel"?P.len/2:P.len*.82;G.ducks.push({x:x0+lx,y:-P.h(lx),got:false,t:0,ph:Math.random()*6})}
-  // Special ducks: rare (about 1 in 16 calm pieces, at most 2 a trip); unfound ones are picked 3 times out of 4.
-  if(["flat","tunnel","hill","bumpy"].includes(id)&&!len&&G.specialSpawned<2&&G.pieces.length>3&&Math.random()<.065){
+  // Special ducks: rare (about 1 in 22 calm pieces, at most 2 a trip); unfound ones are picked 3 times out of 4.
+  if(["flat","tunnel","hill","bumpy"].includes(id)&&!len&&G.specialSpawned<2&&G.pieces.length>3&&Math.random()<.045){
     const unfound=SPECIAL_DUCKS.filter(d=>!save.specials[d.id]),pool=unfound.length&&Math.random()<.75?unfound:SPECIAL_DUCKS;
     let r=Math.random()*pool.reduce((a,d)=>a+(d.w||1),0),kind=pool[0].id;for(const d of pool){r-=d.w||1;if(r<=0){kind=d.id;break}}
     const lx=id==="tunnel"?P.len*.3:P.len*.6;G.ducks.push({x:x0+lx,y:-P.h(lx),got:false,t:0,ph:Math.random()*6,kind});G.specialSpawned++}
