@@ -10,7 +10,7 @@
 :root{--ink:#3b2a1d;--sky1:#bfe8ff;--sky2:#fff6e0;--wood:#e2b47c;--wood2:#b07a43;--go:#3fbf6a;--go2:#2a8f4c;--panel:#fffaf0;color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{font-family:Fredoka,"Comic Sans MS","Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:linear-gradient(var(--sky1),var(--sky2));min-height:100vh;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+body{font-family:Fredoka,"Comic Sans MS","Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:var(--sky2) linear-gradient(var(--sky1),var(--sky2)) no-repeat;background-size:100% 100vh;min-height:100vh;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 [hidden]{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer}
 .screen{max-width:1000px;margin:0 auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top))}
@@ -45,14 +45,14 @@ h1,h2,h3{margin:0;font-weight:700}
 .btn.duckbtn:active{box-shadow:0 2px 0 #e0a800}
 .btn.duckbtn small{display:block;font-size:.95rem;font-weight:600;opacity:.75}
 .duckHint{margin:4px 0 14px;font-size:1.1rem;opacity:.8}
-.duckgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.duckgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
 .ducktile{position:relative;border:0;background:var(--panel);border-radius:20px;padding:8px 8px 10px;box-shadow:0 4px 0 #e2cf9a;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700;font-size:1.05rem}
 .ducktile canvas{width:100%;aspect-ratio:4/3;display:block;border-radius:14px;background:radial-gradient(circle at 50% 60%,#e7f5ff,#d0ebff)}
 .ducktile.found canvas{background:radial-gradient(circle at 50% 60%,#fff9db,#ffe8a3)}
 .ducktile small{font-weight:600;opacity:.65;font-size:.85rem}
 .ducktile.locked{color:#9a8a70}
 .ducktile.fresh::after{content:"NEW!";position:absolute;top:-8px;right:-6px;background:#ff5fa2;color:#fff;border-radius:99px;padding:1px 10px;font-size:.8rem}
-@media (max-width:560px){.duckgrid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:700px){.duckgrid{grid-template-columns:repeat(3,1fr);gap:10px}.ducktile{font-size:.92rem;border-radius:16px;padding:6px 6px 8px}.ducktile small{font-size:.75rem}}
 .duckcard{position:fixed;inset:0;background:rgba(40,30,20,.45);display:grid;place-items:center;padding:16px;z-index:10}
 .dcpanel{background:var(--panel);border-radius:26px;padding:18px 20px 20px;width:min(340px,100%);text-align:center;box-shadow:0 6px 0 #e2cf9a,0 18px 40px rgba(0,0,0,.25);animation:pop .35s}
 .dcpanel canvas{width:100%;aspect-ratio:320/230;border-radius:18px;background:radial-gradient(circle at 50% 60%,#fff9db,#ffe8a3);display:block}
@@ -111,7 +111,7 @@ h1,h2,h3{margin:0;font-weight:700}
 /* game */
 #sGame{position:fixed;inset:0;background:#bfe8ff;touch-action:none;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hud{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));pointer-events:none}
+.hud{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:10px max(12px,env(safe-area-inset-right)) 10px max(12px,env(safe-area-inset-left));padding-top:max(10px,env(safe-area-inset-top));pointer-events:none}
 .hud>*{pointer-events:auto}
 .hpill{background:rgba(255,255,255,.92);border-radius:999px;padding:6px 14px;font-weight:700;font-size:1.2rem;box-shadow:0 3px 0 rgba(0,0,0,.1);white-space:nowrap}
 #prog{flex:1;max-width:420px;margin:0 auto;height:26px;background:rgba(255,255,255,.85);border-radius:99px;position:relative;box-shadow:0 3px 0 rgba(0,0,0,.1)}
@@ -119,7 +119,7 @@ h1,h2,h3{margin:0;font-weight:700}
 #prog b{position:absolute;left:4%;top:50%;transform:translate(-50%,-55%) scaleX(-1);font-size:1.4rem}
 #prog span{position:absolute;right:-6px;top:50%;transform:translateY(-55%);font-size:1.4rem}
 #dist{margin:0 auto}
-#hcards{position:absolute;right:12px;bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px}
+#hcards{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px}
 .pcard{position:relative;width:76px;height:86px;border:0;border-radius:16px;background:var(--c);box-shadow:0 5px 0 rgba(0,0,0,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.72rem;text-shadow:0 1px 0 rgba(0,0,0,.35);overflow:hidden;line-height:1.05;padding:4px}
 .pcard.rainbow{background:linear-gradient(160deg,#ff7b7b,#ffd166,#8bd46e,#6ec3f4,#b38df0)}
 .pcard .ic{font-size:2.1rem;text-shadow:none;margin-bottom:3px}
@@ -130,12 +130,16 @@ h1,h2,h3{margin:0;font-weight:700}
 .pcard .tm{position:absolute;left:0;bottom:0;height:6px;background:#fff;width:0}
 #jumpHint{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);background:rgba(255,255,255,.95);border-radius:999px;padding:10px 22px;font-weight:700;font-size:1.3rem;pointer-events:none;animation:pulse 1s infinite;white-space:nowrap}
 @keyframes pulse{50%{transform:translateX(-50%) scale(1.08)}}
-#gBanner{position:absolute;left:50%;top:74px;transform:translate(-50%,-30px);opacity:0;background:#fff;border-radius:999px;padding:8px 22px;font-weight:700;font-size:clamp(1.05rem,2.6vw,1.5rem);box-shadow:0 4px 0 rgba(0,0,0,.12);white-space:nowrap;transition:transform .3s cubic-bezier(.3,1.6,.6,1),opacity .2s;pointer-events:none}
+#gBanner{position:absolute;left:50%;top:74px;transform:translate(-50%,-30px);opacity:0;background:#fff;border-radius:999px;padding:8px 22px;font-weight:700;font-size:clamp(1.05rem,2.6vw,1.5rem);box-shadow:0 4px 0 rgba(0,0,0,.12);width:max-content;max-width:calc(100% - 24px);text-align:center;transition:transform .3s cubic-bezier(.3,1.6,.6,1),opacity .2s;pointer-events:none}
 #gBanner.show{transform:translate(-50%,0);opacity:1}
 #pauseOv{position:absolute;inset:0;background:rgba(40,30,20,.45);display:grid;place-items:center}
 #pauseOv .panel{background:var(--panel);border-radius:26px;padding:24px 28px;text-align:center;display:grid;gap:14px;min-width:260px}
-#rotate{position:absolute;left:12px;bottom:max(12px,env(safe-area-inset-bottom));background:rgba(255,255,255,.9);border-radius:14px;padding:6px 12px;font-size:.9rem;font-weight:600;pointer-events:none;max-width:45%}
+#rotate{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + 104px);background:rgba(255,255,255,.9);border-radius:14px;padding:6px 12px;font-size:.9rem;font-weight:600;pointer-events:none;width:max-content;max-width:calc(100% - 24px);text-align:center}
 @media (orientation:landscape){#rotate{display:none}}
+/* short screens (phones on their side): smaller HUD and cards so the track has room */
+@media (max-height:500px){.hud{padding-top:max(6px,env(safe-area-inset-top));padding-bottom:6px}.hpill{font-size:1rem;padding:4px 12px}#prog{height:22px}.mini{width:40px;height:40px;font-size:1.2rem}
+  .pcard{width:60px;height:66px;font-size:.6rem;border-radius:13px}.pcard .ic{font-size:1.6rem;margin-bottom:1px}#hcards{gap:8px;bottom:max(8px,env(safe-area-inset-bottom))}#gBanner{top:56px}#jumpHint{font-size:1.1rem;bottom:auto;top:30%}}
+@media (max-width:340px){.hud{gap:6px;padding-left:8px;padding-right:8px}.hpill{font-size:1rem;padding:5px 10px}#prog b,#prog span{font-size:1.15rem}}
 
 /* results */
 #sResult .panel{max-width:560px;margin:3vh auto 0;background:var(--panel);border-radius:28px;padding:24px 20px;text-align:center;box-shadow:0 6px 0 #e2cf9a,0 12px 30px rgba(0,0,0,.12)}
@@ -290,7 +294,7 @@ const CARDS={
   wings: {name:"Rainbow Wings",icon:"🌈",color:"#fff",desc:"Fly over everything",dur:6,need:650,rainbow:true},
 };
 const SLOT3={need:220};
-// 20 collectible special ducks. They turn up rarely on the track; ones you haven't found yet turn up more often.
+// 25 collectible special ducks. They turn up rarely on the track; ones you haven't found yet turn up more often.
 // w = how likely it is to turn up (1 = normal, .5 = twice as rare).
 const SPECIAL_DUCKS=[
   {id:"dragon",name:"Dragon Duck",desc:"Breathes tiny puffs of fire. Just enough to toast a marshmallow!"},
@@ -313,6 +317,11 @@ const SPECIAL_DUCKS=[
   {id:"bigfoot",name:"Bigfoot Duck",w:.5,desc:"Hardly anyone has ever seen it. Big feet, fuzzy fur, friendly smile."},
   {id:"invisible",name:"Invisible Duck",desc:"You can't see it... but it's definitely here. Probably."},
   {id:"fancy",name:"Fancy Duck",desc:"Takes its bath water with a pinkie raised. How very fancy!"},
+  {id:"stone",name:"Stone Duck",desc:"Tough as a rock! Every crack is from a big adventure."},
+  {id:"ruby",name:"Ruby Duck",desc:"Glows a deep, sparkly red. Every side is cut to catch the light."},
+  {id:"marble",name:"Marble Duck",desc:"Smooth, cool and swirly. It once stood in a fancy museum."},
+  {id:"sapphire",name:"Sapphire Duck",desc:"Twinkles like the night sky. Its favorite color is blue... obviously!"},
+  {id:"emerald",name:"Emerald Duck",desc:"Green as a summer forest and twice as sparkly."},
 ];
 const JUMP=760,GRAV=2000;
 
@@ -678,11 +687,16 @@ function openShed(){
 const cv=$("#cv"),cx=cv.getContext("2d");
 const V={W:800,H:450,base:360,px:1};
 let G=null,raf=0,lastT=0;
+// Fits the game to whatever screen it is on. Portrait shows a wider stretch of track (so there is time to
+// see what's coming), and the track always sits above the power-up cards at the bottom.
 function resize(){
-  const w=cv.clientWidth||innerWidth,h=cv.clientHeight||innerHeight,dpr=Math.min(2,devicePixelRatio||1),sc=Math.min(h/340,w/(h>w?330:470));
-  V.W=w/sc;V.H=h/sc;V.base=Math.min(V.H-78,V.H*.45+150);V.px=sc*dpr;cv.width=w*dpr|0;cv.height=h*dpr|0;
+  const w=cv.clientWidth||innerWidth,h=cv.clientHeight||innerHeight,dpr=Math.min(2,devicePixelRatio||1),port=h>w,sc=Math.min(h/340,w/(port?400:470));
+  const cards=($("#hcards").offsetHeight||0)+($("#sGame").clientHeight-$("#hcards").offsetTop-$("#hcards").offsetHeight||0);
+  V.W=w/sc;V.H=h/sc;V.port=port;V.base=Math.min(V.H-78,V.H*.45+150,V.H-24-cards/sc);V.px=sc*dpr;cv.width=w*dpr|0;cv.height=h*dpr|0;
 }
-addEventListener("resize",()=>{if(G)resize()});
+let fitT=0;const refit=()=>{if(!G)return;resize();clearTimeout(fitT);fitT=setTimeout(resize,250)};
+addEventListener("resize",refit);addEventListener("orientationchange",refit);
+if(window.visualViewport)visualViewport.addEventListener("resize",refit);
 
 const ecache={};
 function emo(e,size){const k=e+size;if(!ecache[k]){const c=document.createElement("canvas"),s=Math.ceil(size*1.4)*2;c.width=c.height=s;const x=c.getContext("2d");
@@ -764,7 +778,7 @@ async function startRun(){
   $("#prog").hidden=G.mode!=="journey";$("#dist").hidden=G.mode==="journey";
   $("#prog i").style.width="0";$("#prog b").style.left="4%";$("#dist").textContent="0 m";
   $("#jumpHint").hidden=false;$("#pauseOv").hidden=true;
-  renderHudCards();hudHearts();$("#hStars").textContent="0";$("#hDuckP").hidden=true;
+  renderHudCards();resize();hudHearts();$("#hStars").textContent="0";$("#hDuckP").hidden=true;
   sfx.whistle();banner(G.mode==="journey"?`Journey ${G.level}: to the station! 🚉`:"How far can you go? ♾️",2600);
   lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
@@ -969,6 +983,8 @@ function duckFill(c,k){
     case"unicorn":{const g=c.createLinearGradient(-18,0,16,-30);["#ff8787","#ffc078","#ffe066","#8ce99a","#74c0fc","#b197fc"].forEach((col,i)=>g.addColorStop(i/5,col));return g}
     case"psychic":return rg("#e5dbff","#9775fa","#5f3dc4");
     case"bigfoot":return rg("#d9a87a","#9c6b3a","#5c3a1e");
+    case"stone":return rg("#d6d1c8","#9a948a","#5a564f");
+    case"marble":return rg("#ffffff","#f4f1eb","#c9c3b8");
     case"chess":{const pt=c.createPattern(CHECKS,"repeat");if(pt.setTransform)pt.setTransform(new DOMMatrix().scale(.125));return pt}
     default:return rg("#fff8b8","#ffd43b","#f08c00");
   }
@@ -977,11 +993,53 @@ function duckFill(c,k){
 const CHECKS=(()=>{const v=document.createElement("canvas");v.width=v.height=80;const x=v.getContext("2d");x.fillStyle="#f8f9fa";x.fillRect(0,0,80,80);x.fillStyle="#212529";x.fillRect(0,0,40,40);x.fillRect(40,40,40,40);return v})();
 function tri(c,pts,fill){c.beginPath();for(const p of pts)c.lineTo(p[0],p[1]);c.closePath();c.fillStyle=fill;c.fill()}
 function spark4(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.moveTo(x,y-r);c.quadraticCurveTo(x,y,x+r,y);c.quadraticCurveTo(x,y,x,y+r);c.quadraticCurveTo(x,y,x-r,y);c.quadraticCurveTo(x,y,x,y-r);c.fill()}
+// Gem ducks are cut from stone: a faceted body and head, each facet lit from the top left.
+const GEMS={ruby:["#5c0418","#d0103a","#ff9aae"],sapphire:["#07215e","#1b5fd6","#a8d4ff"],emerald:["#03401f","#0c9a4c","#a9f5c0"]};
+const hexRgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function gemShade(g,t){const [a,b,d]=g.map(hexRgb),u=t<.5?t*2:(t-.5)*2,x=t<.5?a:b,y=t<.5?b:d;return`rgb(${x.map((v,i)=>Math.round(v+(y[i]-v)*u))})`}
+function gemPoly(c,g,cx,cy,rx,ry,n,rot){
+  const L=[-.6,-.8],pts=[],inn=[],ox=cx-rx*.18,oy=cy-ry*.22;
+  for(let i=0;i<n;i++){const a=rot+i/n*Math.PI*2;pts.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry])}
+  for(const q of pts)inn.push([ox+(q[0]-ox)*.46,oy+(q[1]-oy)*.46]);
+  c.lineJoin="round";
+  for(let i=0;i<n;i++){const A=pts[i],B=pts[(i+1)%n],nx=B[1]-A[1],ny=A[0]-B[0],l=Math.hypot(nx,ny),d=(nx*L[0]+ny*L[1])/l;
+    c.beginPath();c.moveTo(A[0],A[1]);c.lineTo(B[0],B[1]);c.lineTo(inn[(i+1)%n][0],inn[(i+1)%n][1]);c.lineTo(inn[i][0],inn[i][1]);c.closePath();
+    c.fillStyle=gemShade(g,clamp(.12+.62*(d+1)/2+(i%2?.06:-.06),0,1));c.fill();c.strokeStyle="rgba(255,255,255,.28)";c.lineWidth=.45;c.stroke()}
+  c.beginPath();inn.forEach(q=>c.lineTo(q[0],q[1]));c.closePath();c.fillStyle=gemShade(g,.86);c.fill();c.strokeStyle="rgba(255,255,255,.5)";c.lineWidth=.45;c.stroke();
+  c.beginPath();pts.forEach(q=>c.lineTo(q[0],q[1]));c.closePath();c.strokeStyle=gemShade(g,0);c.lineWidth=.8;c.stroke()}
+function gemDuck(c,g){
+  // tail: two facets split down the middle
+  tri(c,[[-11,-9],[-18,-19],[-10.5,-14]],gemShade(g,.68));tri(c,[[-11,-9],[-10.5,-14],[-7,-14]],gemShade(g,.32));
+  c.beginPath();c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath();c.strokeStyle=gemShade(g,0);c.lineWidth=.8;c.stroke();
+  gemPoly(c,g,0,-8,14.6,8.9,10,Math.PI/10);gemPoly(c,g,6,-21,7.9,7.9,8,Math.PI/8)}
+// Stone and marble: each part (tail, body, head) is filled, given its texture and outlined in turn,
+// so the parts in front still overlap the ones behind.
+const DUCK_PARTS=[c=>{c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath()},c=>c.ellipse(0,-8,14,8.5,0,0,7),c=>c.arc(6,-21,7.5,0,7)];
+function rockDuck(c,k){
+  for(const part of DUCK_PARTS){c.beginPath();part(c);c.fillStyle=duckFill(c,k);c.fill();c.save();c.clip();rockTexture(c,k);c.restore();
+    c.beginPath();part(c);c.strokeStyle=k==="stone"?"rgba(60,55,48,.6)":"rgba(150,150,158,.6)";c.lineWidth=1;c.stroke()}}
+function rockTexture(c,k){
+  if(k==="stone"){let r=7;const rnd=()=>(r=(r*9301+49297)%233280)/233280;
+    for(let i=0;i<70;i++){c.fillStyle=rnd()<.5?"rgba(60,55,48,.28)":"rgba(255,255,255,.3)";c.beginPath();c.arc(-18+rnd()*33,-29+rnd()*29,.35+rnd()*.6,0,7);c.fill()}
+    const cracks=[[[-13,-12],[-9.5,-9],[-10.5,-5.5],[-6.5,-3],[-6,-.5]],[[2,-16],[3.6,-12.4],[.8,-9.6],[3,-5.6],[1.4,-.5]],[[3.6,-12.4],[8,-11.2],[10,-7.6]],[[3,-28.6],[5.2,-25.4],[3.2,-22.4],[5.8,-19.2]],[[-17,-18],[-14,-16.4],[-13.6,-13.6]]];
+    for(const [col,w,dx] of[["rgba(255,255,255,.4)",.6,.55],["rgba(40,34,28,.8)",.95,0]]){c.strokeStyle=col;c.lineWidth=w;c.lineJoin="miter";
+      for(const cr of cracks){c.beginPath();cr.forEach(q=>c.lineTo(q[0]+dx,q[1]+dx));c.stroke()}}}
+  else{
+    const vein=(pts,w,col)=>{c.strokeStyle=col;c.lineWidth=w;c.lineCap="round";c.beginPath();c.moveTo(pts[0],pts[1]);for(let i=2;i<pts.length;i+=6)c.bezierCurveTo(pts[i],pts[i+1],pts[i+2],pts[i+3],pts[i+4],pts[i+5]);c.stroke()};
+    for(const [w,col] of[[2.4,"rgba(150,150,160,.22)"],[.7,"rgba(95,100,112,.65)"]]){
+      vein([-19,-17,-12,-14,-12,-6,-4,-4,3,-2,8,-6,15,-3],w,col);
+      vein([2,-29,5,-24,1,-19,7,-15,10,-13,9,-10,14,-12],w,col);
+      vein([-14,-2,-10,-8,-6,-11,-2,-14],w*.7,col)}
+    // the swirl on its side
+    c.strokeStyle="rgba(95,100,112,.6)";c.lineWidth=.7;c.beginPath();
+    for(let a=0;a<Math.PI*3.4;a+=.15){const r=.5+a*.62;c.lineTo(-1+Math.cos(a)*r*1.35,-8.5+Math.sin(a)*r*.8)}c.stroke();
+    c.strokeStyle="rgba(160,140,90,.35)";c.lineWidth=.45;vein([-8,-15,-4,-17,0,-12,4,-13,8,-15,12,-10],.45,"rgba(170,140,80,.4)");
+    const gl=c.createLinearGradient(-10,-30,6,-2);gl.addColorStop(0,"rgba(255,255,255,.55)");gl.addColorStop(.35,"rgba(255,255,255,0)");c.fillStyle=gl;c.fillRect(-20,-30,36,30)}}
 function drawDuck(c,k,x,y,s=1,f=1,t=0){
   c.save();c.translate(x,y);
   // auras sit behind the duck and are not mirrored
-  if(k==="punk"||k==="gold"||k==="psychic"){const p=.75+.25*Math.sin(t*3),col={punk:"255,40,40",gold:"255,215,80",psychic:"210,190,255"}[k],g=c.createRadialGradient(0,-14*s,3,0,-14*s,30*s);
-    g.addColorStop(0,`rgba(${col},${({punk:.38,gold:.3,psychic:.5})[k]*p})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.beginPath();c.arc(0,-14*s,30*s,0,7);c.fill()}
+  if(k==="punk"||k==="gold"||k==="psychic"||k==="sapphire"){const p=.75+.25*Math.sin(t*3),col={punk:"255,40,40",gold:"255,215,80",psychic:"210,190,255",sapphire:"120,180,255"}[k],g=c.createRadialGradient(0,-14*s,3,0,-14*s,30*s);
+    g.addColorStop(0,`rgba(${col},${({punk:.38,gold:.3,psychic:.5,sapphire:.32})[k]*p})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.beginPath();c.arc(0,-14*s,30*s,0,7);c.fill()}
   c.scale(s*f,s);
   const OUT="rgba(110,60,0,.45)";
   // ---- behind the body
@@ -1006,17 +1064,22 @@ function drawDuck(c,k,x,y,s=1,f=1,t=0){
     c.beginPath();c.ellipse(14,-20,5,2.4,.1,0,7);c.stroke();
     c.lineWidth=1;c.beginPath();c.arc(8.5,-23,1.5,0,7);c.stroke();c.beginPath();c.arc(-2,-9,6,.2,2.2);c.stroke();
     c.restore();return}
-  c.fillStyle=duckFill(c,k);c.strokeStyle=OUT;c.lineWidth=1;
-  c.beginPath();c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath();c.fill();c.stroke();
-  c.beginPath();c.ellipse(0,-8,14,8.5,0,0,7);c.fill();c.stroke();
-  c.beginPath();c.arc(6,-21,7.5,0,7);c.fill();c.stroke();
+  const GEM=GEMS[k];
+  if(GEM)gemDuck(c,GEM);
+  else if(k==="stone"||k==="marble")rockDuck(c,k);
+  else{
+    c.fillStyle=duckFill(c,k);c.strokeStyle=OUT;c.lineWidth=1;
+    c.beginPath();c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath();c.fill();c.stroke();
+    c.beginPath();c.ellipse(0,-8,14,8.5,0,0,7);c.fill();c.stroke();
+    c.beginPath();c.arc(6,-21,7.5,0,7);c.fill();c.stroke()}
   if(k==="chess"){const sh=c.createRadialGradient(-3,-16,2,0,-10,20);sh.addColorStop(0,"rgba(255,255,255,.35)");sh.addColorStop(.5,"rgba(255,255,255,0)");sh.addColorStop(1,"rgba(0,0,0,.3)");c.fillStyle=sh;
     c.beginPath();c.moveTo(-11,-9);c.lineTo(-18,-19);c.lineTo(-7,-14);c.closePath();c.fill();c.beginPath();c.ellipse(0,-8,14,8.5,0,0,7);c.fill();c.beginPath();c.arc(6,-21,7.5,0,7);c.fill();
     c.fillStyle="#fff";c.beginPath();c.arc(8.5,-23,2.6,0,7);c.fill()}
-  c.fillStyle="rgba(255,255,255,.35)";c.beginPath();c.ellipse(3,-24,2.6,1.6,-.5,0,7);c.fill();
-  const beak=k==="zombie"?"#c9a55a":"#ff922b";
-  c.fillStyle=beak;c.beginPath();c.ellipse(14,-20,5,2.4,.1,0,7);c.fill();c.fillStyle=k==="zombie"?"#9c7c3a":"#e8590c";c.beginPath();c.ellipse(13.5,-18.6,4,1.3,.1,0,7);c.fill();
-  c.strokeStyle=k==="ninja"?"rgba(255,255,255,.18)":"rgba(200,110,0,.55)";c.lineWidth=1.4;c.beginPath();c.arc(-2,-9,6,.2,2.2);c.stroke();
+  if(!GEM){c.fillStyle="rgba(255,255,255,.35)";c.beginPath();c.ellipse(3,-24,2.6,1.6,-.5,0,7);c.fill()}
+  if(GEM){tri(c,[[12.6,-22.4],[19.6,-20.4],[12.6,-20]],gemShade(GEM,.8));tri(c,[[12.6,-20],[19.6,-20.4],[12.6,-17.8]],gemShade(GEM,.3))}
+  else{const [beak,under]={zombie:["#c9a55a","#9c7c3a"],stone:["#8f8a80","#66625b"],marble:["#ece8e0","#bdb7ac"]}[k]||["#ff922b","#e8590c"];
+    c.fillStyle=beak;c.beginPath();c.ellipse(14,-20,5,2.4,.1,0,7);c.fill();c.fillStyle=under;c.beginPath();c.ellipse(13.5,-18.6,4,1.3,.1,0,7);c.fill()}
+  c.strokeStyle=k==="ninja"||GEM?"rgba(255,255,255,.22)":k==="stone"?"rgba(50,45,40,.5)":k==="marble"?"rgba(130,130,140,.45)":"rgba(200,110,0,.55)";c.lineWidth=1.4;c.beginPath();c.arc(-2,-9,6,.2,2.2);c.stroke();
   // ---- eyes
   const eye=()=>{c.fillStyle="#2b1d12";c.beginPath();c.arc(8.5,-23,1.6,0,7);c.fill();c.fillStyle="#fff";c.beginPath();c.arc(9,-23.6,.6,0,7);c.fill()};
   if(k==="zombie"){c.strokeStyle="#2b1d12";c.lineWidth=1.3;c.beginPath();c.moveTo(7,-24.5);c.lineTo(10,-21.5);c.moveTo(10,-24.5);c.lineTo(7,-21.5);c.stroke()}
@@ -1040,6 +1103,9 @@ function drawDuck(c,k,x,y,s=1,f=1,t=0){
       c.fillStyle="#ffe066";c.beginPath();c.moveTo(4,-27);c.lineTo(10,-42);c.lineTo(9,-26.5);c.closePath();c.fill();
       c.strokeStyle="#e8a400";c.lineWidth=.8;c.beginPath();for(let i=0;i<3;i++){c.moveTo(4.6+i*1.6,-29-i*4);c.lineTo(9-i*.4,-30.5-i*4)}c.stroke();
       for(const [mx,my,col] of[[0,-27,"#f783ac"],[-2,-22,"#b197fc"],[-1,-17,"#74c0fc"],[2,-29,"#ffc078"]]){c.fillStyle=col;c.beginPath();c.arc(mx,my,3,0,7);c.fill()}break;
+    case"ruby":case"emerald":case"sapphire":{
+      const sp=k==="sapphire"?[[-8,-13,0],[10,-26,2.1],[3,-6,4.2],[-14,-18,1.1],[5,-17,3.3]]:[[-7,-12,0],[9,-25,2.6],[2,-5,4.4]];
+      for(const [px,py,ph] of sp){const tw=Math.max(0,Math.sin(t*3+ph));if(tw>.05)spark4(c,px,py,(k==="sapphire"?3.4:2.8)*tw,"rgba(255,255,255,.95)")}break}
     case"gold":{const tw=.5+.5*Math.sin(t*4);spark4(c,-6,-15,3+2*tw,"rgba(255,255,255,.95)");spark4(c,10,-27,2+1.5*(1-tw),"rgba(255,255,255,.9)");break}
     case"cowboy":
       c.fillStyle="#9c6b3a";c.beginPath();c.ellipse(5,-27.5,13,3,-.08,0,7);c.fill();
@@ -1197,7 +1263,7 @@ function wagonPoses(g){
 function render(){
   const g=G,W=V.W,H=V.H,B=V.base,P=woods();
   cx.setTransform(V.px,0,0,V.px,0,0);
-  const camX=g.ex-Math.min(W*.3,240),sx=x=>x-camX;
+  const camX=g.ex-Math.min(W*(V.port?.2:.3),240),sx=x=>x-camX;
   g.camY+=(Math.max(0,-g.y-120)-g.camY)*.1;const camY=g.camY;
   const sky=cx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#7cc8fb");sky.addColorStop(.7,"#d8f3ff");sky.addColorStop(1,"#fff6e0");cx.fillStyle=sky;cx.fillRect(0,0,W,H);
   const sunY=Math.max(60,B-230),sg=cx.createRadialGradient(W-80,sunY,10,W-80,sunY,70);sg.addColorStop(0,"#fff3a0");sg.addColorStop(.45,"#ffe066");sg.addColorStop(.5,"rgba(255,224,102,.35)");sg.addColorStop(1,"rgba(255,224,102,0)");
