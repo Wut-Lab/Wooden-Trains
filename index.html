@@ -29,7 +29,7 @@ h1,h2,h3{margin:0;font-weight:700}
 .starchip{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:6px 16px;font-weight:700;font-size:1.25rem;box-shadow:0 3px 0 #e2cf9a;white-space:nowrap}
 
 /* title */
-#sTitle{text-align:center;padding-top:5vh}
+#sTitle{text-align:center}
 .logo{font-size:clamp(2.4rem,9vw,4.4rem);line-height:1;color:#d94b45;text-shadow:0 4px 0 #fff,0 7px 0 rgba(0,0,0,.12)}
 .logo span{color:#3a82d6}
 .tag{margin:10px 0 0;font-size:1.15rem;opacity:.8}
@@ -64,8 +64,8 @@ h1,h2,h3{margin:0;font-weight:700}
 .dcpanel small{display:block;opacity:.6;font-weight:600;margin-bottom:14px}
 .dcpanel .btn{font-size:1.15rem;padding:10px 26px}
 /* full screen + dad lock */
-.menu2{display:flex;gap:12px;max-width:340px;margin:16px auto 0}
-.menu2 .btn{flex:1;font-size:1.05rem;padding:10px 6px;background:#fff;box-shadow:0 5px 0 #d8c9a8,0 7px 12px rgba(0,0,0,.1)}
+.menu2{display:flex;gap:10px;justify-content:flex-end;margin:0 0 max(8px,3vh)}
+.menu2 .btn{font-size:1rem;padding:8px 14px;border-radius:14px;background:#fff;box-shadow:0 5px 0 #d8c9a8,0 7px 12px rgba(0,0,0,.1)}
 .menu2 .btn:active{box-shadow:0 1px 0 #d8c9a8}
 .menu2 .btn.on{background:#ffd8e8;box-shadow:0 5px 0 #e08aae,0 7px 12px rgba(0,0,0,.1)}
 #dlg{position:fixed;inset:0;z-index:50;background:rgba(40,30,20,.55);display:grid;place-items:center;padding:16px}
@@ -185,6 +185,10 @@ h1,h2,h3{margin:0;font-weight:700}
 
 <!-- TITLE -->
 <section id="sTitle" class="screen">
+  <div class="menu2">
+    <button class="btn" id="bFull">Full screen ⛶</button>
+    <button class="btn" id="bLock">Dad lock 🔓</button>
+  </div>
   <h1 class="logo">Choo-Choo <span>Cards</span></h1>
   <p class="tag">Tap to jump! Hop over blocks, catch stars, reach the station.</p>
   <div class="paradeWrap"><div class="rail"></div><div class="parade"><div class="blk">A</div><div class="tr" id="titleTrain"></div></div></div>
@@ -193,10 +197,6 @@ h1,h2,h3{margin:0;font-weight:700}
     <button class="btn go" id="bPlay">Play! 🚂</button>
     <button class="btn blue" id="bShed">My Toy Box 🧸</button>
     <button class="btn duckbtn" id="bDucks">Special Ducks 🐤<small id="duckCount"></small></button>
-  </div>
-  <div class="menu2">
-    <button class="btn" id="bFull">Full screen ⛶</button>
-    <button class="btn" id="bLock">Dad lock 🔓</button>
   </div>
   <div class="next" id="titleNext"></div>
 </section>
