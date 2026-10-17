@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Choo-Choo Cards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
@@ -61,6 +63,22 @@ h1,h2,h3{margin:0;font-weight:700}
 .dcpanel p{margin:0 0 6px;font-size:1.1rem;line-height:1.35}
 .dcpanel small{display:block;opacity:.6;font-weight:600;margin-bottom:14px}
 .dcpanel .btn{font-size:1.15rem;padding:10px 26px}
+/* full screen + dad lock */
+.menu2{display:flex;gap:12px;max-width:340px;margin:16px auto 0}
+.menu2 .btn{flex:1;font-size:1.05rem;padding:10px 6px;background:#fff;box-shadow:0 5px 0 #d8c9a8,0 7px 12px rgba(0,0,0,.1)}
+.menu2 .btn:active{box-shadow:0 1px 0 #d8c9a8}
+.menu2 .btn.on{background:#ffd8e8;box-shadow:0 5px 0 #e08aae,0 7px 12px rgba(0,0,0,.1)}
+#dlg{position:fixed;inset:0;z-index:50;background:rgba(40,30,20,.55);display:grid;place-items:center;padding:16px}
+#dlg .panel{background:var(--panel);border-radius:26px;padding:22px 22px 18px;text-align:center;display:grid;gap:12px;width:100%;max-width:380px;box-shadow:0 6px 0 #e2cf9a,0 12px 30px rgba(0,0,0,.2)}
+#dlgT{font-size:1.6rem}
+#dlgM{margin:0;font-size:1.15rem;line-height:1.35}
+#dlgIn{font:inherit;font-size:1.3rem;padding:10px 14px;border-radius:14px;border:3px solid #e2cf9a;background:#fff;text-align:center;width:100%;user-select:text;-webkit-user-select:text}
+#dlgIn:focus{outline:none;border-color:#6ec3f4}
+#dlgErr{color:#d94b45;font-weight:600;margin:-4px 0}
+#dlgErr:empty{display:none}
+#dlgBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#dlgBtns .btn{font-size:1.1rem;padding:10px 18px}
+#dlgForgot{background:none;border:0;text-decoration:underline;opacity:.65;font-size:.95rem;padding:2px}
 .next{max-width:440px;margin:22px auto 0;background:var(--panel);border-radius:20px;padding:12px 16px;box-shadow:0 4px 0 #e8d8b0;display:flex;align-items:center;gap:12px;text-align:left}
 .next .thumb{width:84px;height:46px;flex:none;display:grid;place-items:center;font-size:2rem}
 .next .thumb svg{width:100%;height:100%}
@@ -176,6 +194,10 @@ h1,h2,h3{margin:0;font-weight:700}
     <button class="btn blue" id="bShed">My Toy Box 🧸</button>
     <button class="btn duckbtn" id="bDucks">Special Ducks 🐤<small id="duckCount"></small></button>
   </div>
+  <div class="menu2">
+    <button class="btn" id="bFull">Full screen ⛶</button>
+    <button class="btn" id="bLock">Dad lock 🔓</button>
+  </div>
   <div class="next" id="titleNext"></div>
 </section>
 
@@ -261,6 +283,15 @@ h1,h2,h3{margin:0;font-weight:700}
     </div>
   </div>
 </section>
+
+<div id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlgT"><div class="panel">
+  <h2 id="dlgT"></h2>
+  <p id="dlgM"></p>
+  <input id="dlgIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Password">
+  <div id="dlgErr" role="alert"></div>
+  <div id="dlgBtns"></div>
+  <button id="dlgForgot">Forgot the password?</button>
+</div></div>
 
 <script>
 "use strict";
@@ -673,7 +704,7 @@ function openDuckCard(tile){
 function closeDuckCard(){if($("#duckCard").hidden)return;$("#duckCard").hidden=true;sfx.pick();if(cardReturn&&cardReturn.focus)cardReturn.focus()}
 $("#dcBack").onclick=closeDuckCard;
 $("#duckCard").addEventListener("click",e=>{if(e.target.id==="duckCard")closeDuckCard()});
-addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#duckCard").hidden)closeDuckCard()});
+addEventListener("keydown",e=>{if(!$("#dlg").hidden)return;if(e.key==="Escape"&&!$("#duckCard").hidden)closeDuckCard()});
 function updateDuckButton(){const n=SPECIAL_DUCKS.filter(d=>save.specials[d.id]).length;$("#duckCount").textContent=`${n} of ${SPECIAL_DUCKS.length} found`}
 function openShed(){
   const un=ALL_UNLOCKS.filter(has).length;
@@ -1462,13 +1493,132 @@ $("#bQuit").onclick=()=>{if(G&&G.started){const g=G;g.state="crash";stopGame();r
 $("#bMute2").onclick=()=>{save.mute=!save.mute;persist();syncMute()};
 $("#bReset").onclick=()=>{if(confirm("Clear all stars, trains, cards, track pieces and special ducks and start over?")){Object.assign(save,{stars:0,skin:"red",cards:["shield","magnet"],mode:"journey",journey:1,best:0,runs:0,trips:0,ducks:0,specials:{}});persist();openShed()}};
 addEventListener("keydown",e=>{
-  if(!G)return;
+  if(!G||!$("#dlg").hidden)return;
   if(e.key===" "||e.key==="ArrowUp"||e.key==="w"||e.key==="W"){e.preventDefault();if(!e.repeat)press()}
   else if(e.key>="1"&&e.key<="3")useCard(+e.key-1);
   else if(e.key==="p"||e.key==="P"||e.key==="Escape")setPause(!G.paused);
 });
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&G.started)setPause(true)});
+
+/* ================= full screen + dad lock ================= */
+const LKEY="choochoo_dadlock_v1";
+let lock=(()=>{try{return JSON.parse(localStorage.getItem(LKEY)||"{}")||{}}catch(e){return{}}})();
+const saveLock=()=>{try{localStorage.setItem(LKEY,JSON.stringify(lock))}catch(e){}};
+const pwHash=t=>{let h=2166136261;for(const c of "choo:"+t)h=Math.imul(h^c.codePointAt(0),16777619);return(h>>>0).toString(36)};
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+const fsCan=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+let fsQuiet=false;
+function fsEnter(){
+  const d=document.documentElement;
+  try{
+    if(d.requestFullscreen)return d.requestFullscreen({navigationUI:"hide"}).then(()=>true,()=>false);
+    d.webkitRequestFullscreen();return Promise.resolve(true);
+  }catch(e){return Promise.resolve(false)}
+}
+function fsExit(){fsQuiet=true;try{const p=(document.exitFullscreen||document.webkitExitFullscreen).call(document);if(p&&p.catch)p.catch(()=>{fsQuiet=false})}catch(e){fsQuiet=false}}
+function syncScreenBtns(){
+  const f=$("#bFull"),l=$("#bLock");
+  f.textContent=fsEl()?"Exit full screen ↙":"Full screen ⛶";
+  l.textContent=lock.on?"Dad lock: on 🔒":"Dad lock 🔓";
+  l.classList.toggle("on",!!lock.on);
+}
+// small dialog: resolves to {v, val}; buttons with check() stay open until it returns null
+function ask(o){return new Promise(res=>{
+  const d=$("#dlg"),inp=$("#dlgIn"),err=$("#dlgErr"),bx=$("#dlgBtns"),fg=$("#dlgForgot");
+  $("#dlgT").textContent=o.t;$("#dlgM").textContent=o.m;
+  inp.hidden=!o.input;inp.value="";err.textContent="";
+  inp.type=o.input==="num"?"text":"password";inp.inputMode=o.input==="num"?"numeric":"text";
+  inp.setAttribute("aria-label",o.input==="num"?"Answer":"Password");
+  const done=v=>{d.hidden=true;inp.blur();d.onkeydown=null;res({v,val:inp.value})};
+  const fire=b=>{
+    if(b.check){const e=b.check(inp.value);if(e){err.textContent=e;inp.value="";inp.focus();return}}
+    done(b.v);
+  };
+  bx.innerHTML="";
+  for(const b of o.b){const el=document.createElement("button");el.className="btn "+(b.c||"");el.textContent=b.l;el.onclick=()=>fire(b);bx.append(el)}
+  fg.hidden=!o.forgot;fg.onclick=()=>done("forgot");
+  d.onkeydown=e=>{if(e.key==="Enter"&&e.target===inp){e.preventDefault();fire(o.b.find(b=>b.enter)||o.b[o.b.length-1])}};
+  d.hidden=false;
+  if(o.input)setTimeout(()=>inp.focus(),60);
+})}
+const pwOk=v=>pwHash(v)===lock.pw?null:"Oops, that's not the password.";
+async function forgotPw(){
+  const a=6+Math.floor(Math.random()*4),b=6+Math.floor(Math.random()*4);
+  const r=await ask({t:"Grown-ups only 🧑",m:`To reset the password, what is ${a} × ${b}?`,input:"num",
+    b:[{l:"Cancel",c:"blue",v:0},{l:"Reset",c:"go",v:1,enter:1,check:x=>+x===a*b?null:"Not quite, try again."}]});
+  if(r.v!==1)return;
+  lock={};saveLock();syncScreenBtns();
+  await ask({t:"Password reset",m:"Dad lock is off. Tap Dad lock to pick a new password.",b:[{l:"OK",c:"go",v:1}]});
+}
+async function askPw(t,m){
+  const r=await ask({t,m,input:"pw",forgot:true,b:[{l:"Cancel",c:"blue",v:0},{l:"OK",c:"go",v:1,enter:1,check:pwOk}]});
+  if(r.v==="forgot"){await forgotPw();return false}
+  return r.v===1;
+}
+async function newPw(){
+  const a=await ask({t:"Dad lock 🔒",m:"Pick a password for grown-ups. You'll need it to unlock the screen.",input:"pw",
+    b:[{l:"Cancel",c:"blue",v:0},{l:"Next",c:"go",v:1,enter:1,check:x=>x.length>=3?null:"Use at least 3 letters or numbers."}]});
+  if(a.v!==1)return false;
+  const b=await ask({t:"Dad lock 🔒",m:"Type the password again.",input:"pw",
+    b:[{l:"Cancel",c:"blue",v:0},{l:"Save",c:"go",v:1,enter:1,check:x=>x===a.val?null:"That didn't match. Try again."}]});
+  if(b.v!==1)return false;
+  lock.pw=pwHash(a.val);saveLock();return true;
+}
+async function confirmExit(){
+  return (await ask({t:"Full screen 📺",m:"Are you sure you want to exit full screen mode?",
+    b:[{l:"Yes, exit",c:"blue",v:1},{l:"No, stay",c:"go",v:0}]})).v===1;
+}
+// shown when full screen ends while dad lock holds it there: no way out but the password
+async function lockedPrompt(){
+  for(;;){
+    if(!lock.on||lock.mode!=="full"||fsEl())return;
+    const r=await ask({t:"Dad lock 🔒",m:"The screen is locked in full screen. Ask a grown-up for the password to leave it.",input:"pw",forgot:true,
+      b:[{l:"Unlock",c:"blue",v:"ok",enter:1,check:pwOk},{l:"Back to full screen",c:"go",v:"back"}]});
+    if(r.v==="ok"){lock.on=false;saveLock();syncScreenBtns();return}
+    if(r.v==="back"&&await fsEnter())return;
+    if(r.v==="forgot")await forgotPw();
+  }
+}
+function onFsChange(){
+  syncScreenBtns();
+  if(fsEl())return;
+  if(fsQuiet){fsQuiet=false;return}
+  // left full screen by Esc, a swipe or the back button: stop the train and ask
+  if(G)setPause(true);
+  if(lock.on&&lock.mode==="full")lockedPrompt();
+  else confirmExit().then(yes=>{if(!yes)fsEnter()});
+}
+document.addEventListener("fullscreenchange",onFsChange);
+document.addEventListener("webkitfullscreenchange",onFsChange);
+$("#bFull").onclick=async()=>{
+  ctx();sfx.pick();
+  if(!fsCan){
+    const app=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+    await ask({t:"Full screen 📺",m:app?"You're already playing full screen!":"This browser can't go full screen. Tap Share, then \u201cAdd to Home Screen\u201d, and open the game from there to play full screen.",b:[{l:"OK",c:"go",v:1}]});
+    return;
+  }
+  if(lock.on){
+    if(!await askPw("Dad lock is on 🔒",`The screen is locked in ${lock.mode==="full"?"full screen":"normal"} mode. Enter the password to change it.`))return;
+    lock.on=false;saveLock();syncScreenBtns();
+  }
+  if(fsEl()){if(await confirmExit())fsExit()}
+  else fsEnter();
+};
+$("#bLock").onclick=async()=>{
+  ctx();sfx.pick();
+  if(lock.on){
+    if(await askPw("Unlock 🔓","Enter the password to turn off dad lock.")){lock.on=false;saveLock();syncScreenBtns()}
+    return;
+  }
+  if(lock.pw){if(!await askPw("Dad lock 🔒","Enter the password to lock the screen."))return}
+  else if(!await newPw())return;
+  lock.on=true;lock.mode=fsEl()?"full":"window";saveLock();syncScreenBtns();
+  await ask({t:"Locked 🔒",m:`The screen is locked in ${lock.mode==="full"?"full screen":"normal"} mode. Tap Dad lock and enter the password to unlock it.`,b:[{l:"OK",c:"go",v:1}]});
+};
+
 $("#gdefs").innerHTML=DEFS;syncMute();goHome();
+syncScreenBtns();
+if(fsCan&&lock.on&&lock.mode==="full")lockedPrompt();
 </script>
 </body>
 </html>
